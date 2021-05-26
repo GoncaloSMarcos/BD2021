@@ -1,21 +1,3 @@
-##
-## =============================================
-## ============== Bases de Dados ===============
-## ============== LEI  2020/2021 ===============
-## =============================================
-## =================== Demo ====================
-## =============================================
-## =============================================
-## === Department of Informatics Engineering ===
-## =========== University of Coimbra ===========
-## =============================================
-##
-## Authors: 
-##   Nuno Antunes <nmsa@dei.uc.pt>
-##   BD 2021 Team - https://dei.uc.pt/lei/
-##   University of Coimbra
-
- 
 from flask import Flask, jsonify, request
 import logging, psycopg2, time
 
@@ -34,171 +16,25 @@ def hello():
     <br/>
     """
 
-
-
-
-##
-##      Demo GET
-##
-## Obtain all departments, in JSON format
-##
-## To use it, access: 
-## 
-##   http://localhost:8080/departments/
-##
-
-@app.route("/departments/", methods=['GET'], strict_slashes=True)
-def get_all_departments():
-    logger.info("###              DEMO: GET /departments              ###");   
+@app.route("/utilizador/", methods=['GET'], strict_slashes=True)
+def get_all_users():
+    logger.info("###              GET /users              ###");   
 
     conn = db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT ndep, nome, local FROM dep")
+    cur.execute("SELECT username, email FROM utilizador")
     rows = cur.fetchall()
 
     payload = []
-    logger.debug("---- departments  ----")
+    logger.debug("---- Utilizadores  ----")
     for row in rows:
         logger.debug(row)
-        content = {'ndep': int(row[0]), 'nome': row[1], 'localidade': row[2]}
+        content = {'username': row[0], 'email': row[1]}
         payload.append(content) # appending to the payload to be returned
 
     conn.close()
     return jsonify(payload)
-
-
-
-##
-##      Demo GET
-##
-## Obtain department with ndep <ndep>
-##
-## To use it, access: 
-## 
-##   http://localhost:8080/departments/10
-##
-
-@app.route("/departments/<ndep>", methods=['GET'])
-def get_department(ndep):
-    logger.info("###              DEMO: GET /departments/<ndep>              ###");   
-
-    logger.debug(f'ndep: {ndep}')
-
-    conn = db_connection()
-    cur = conn.cursor()
-
-    cur.execute("SELECT ndep, nome, local FROM dep where ndep = %s", (ndep,) )
-    rows = cur.fetchall()
-
-    row = rows[0]
-
-    logger.debug("---- selected department  ----")
-    logger.debug(row)
-    content = {'ndep': int(row[0]), 'nome': row[1], 'localidade': row[2]}
-
-    conn.close ()
-    return jsonify(content)
-
-
-
-##
-##      Demo POST
-##
-## Add a new department in a JSON payload
-##
-## To use it, you need to use postman or curl: 
-##
-##   curl -X POST http://localhost:8080/departments/ -H "Content-Type: application/json" -d '{"localidade": "Polo II", "ndep": 69, "nome": "Seguranca"}'
-##
-
-
-@app.route("/departments/", methods=['POST'])
-def add_departments():
-    logger.info("###              DEMO: POST /departments              ###");   
-    payload = request.get_json()
-
-    conn = db_connection()
-    cur = conn.cursor()
-
-    logger.info("---- new department  ----")
-    logger.debug(f'payload: {payload}')
-
-    # parameterized queries, good for security and performance
-    statement = """
-                  INSERT INTO dep (ndep, nome, local) 
-                          VALUES ( %s,   %s ,   %s )"""
-
-    values = (payload["ndep"], payload["localidade"], payload["nome"])
-
-    try:
-        cur.execute(statement, values)
-        cur.execute("commit")
-        result = 'Inserted!'
-    except (Exception, psycopg2.DatabaseError) as error:
-        logger.error(error)
-        result = 'Failed!'
-    finally:
-        if conn is not None:
-            conn.close()
-
-    return jsonify(result)
-
-
-
-
-##
-##      Demo PUT
-##
-## Update a department based on the a JSON payload
-##
-## To use it, you need to use postman or curl: 
-##
-##   curl -X PUT http://localhost:8080/departments/ -H "Content-Type: application/json" -d '{"ndep": 69, "localidade": "Porto"}'
-##
-
-@app.route("/departments/", methods=['PUT'])
-def update_departments():
-    logger.info("###              DEMO: PUT /departments              ###");   
-    content = request.get_json()
-
-    conn = db_connection()
-    cur = conn.cursor()
-
-
-    #if content["ndep"] is None or content["nome"] is None :
-    #    return 'ndep and nome are required to update'
-
-    if "ndep" not in content or "localidade" not in content:
-        return 'ndep and localidade are required to update'
-
-
-    logger.info("---- update department  ----")
-    logger.info(f'content: {content}')
-
-    # parameterized queries, good for security and performance
-    statement ="""
-                UPDATE dep 
-                  SET local = %s
-                WHERE ndep = %s"""
-
-
-    values = (content["localidade"], content["ndep"])
-
-    try:
-        res = cur.execute(statement, values)
-        result = f'Updated: {cur.rowcount}'
-        cur.execute("commit")
-    except (Exception, psycopg2.DatabaseError) as error:
-        logger.error(error)
-        result = 'Failed!'
-    finally:
-        if conn is not None:
-            conn.close()
-    return jsonify(result)
-
-
-
 
 
 
