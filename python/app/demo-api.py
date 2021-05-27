@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 @app.route('/') 
 def hello(): 
+    
     return """
 
     Hello World!  <br/>
@@ -16,9 +17,14 @@ def hello():
     <br/>
     """
 
-@app.route("/utilizador/", methods=['GET'], strict_slashes=True)
+##########################################################
+## GETS
+##########################################################
+
+@app.route("/dbproj/user/", methods=['GET'])
 def get_all_users():
-    logger.info("###              GET /users              ###");   
+
+    logger.info("###              GET /dbproj/user/              ###");   
 
     conn = db_connection()
     cur = conn.cursor()
@@ -36,6 +42,87 @@ def get_all_users():
     conn.close()
     return jsonify(payload)
 
+##########################################################
+## POSTS
+##########################################################
+
+@app.route("/dbproj/user/", methods=['POST'])
+def add_utilizador():
+
+    logger.info("###              POST /dbproj/user/              ###");   
+    payload = request.get_json()
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.info("---- novo utilizador  ----")
+    logger.debug(f'payload: {payload}')
+
+    # parameterized queries, good for security and performance
+    statement = """
+                  INSERT INTO utilizador (username, email, password, banned, admin) 
+                          VALUES (%s, %s, %s, false, false)"""
+
+    values = (payload["username"], payload["email"], payload["password"])
+
+    try:
+        cur.execute(statement, values)
+        cur.execute("commit")
+        result = {'userId': payload["username"]}
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        result = {'erro': str(type(error))} 
+
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return jsonify(result)
+
+##########################################################
+## PUTS
+##########################################################
+
+@app.route("/dbproj/user/", methods=['PUT'])
+def update_departments():
+    logger.info("###               PUT /dbproj/user/              ###");   
+    content = request.get_json()
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+
+    #if content["ndep"] is None or content["nome"] is None :
+    #    return 'ndep and nome are required to update'
+
+    if "ndep" not in content or "localidade" not in content:
+        return 'ndep and localidade are required to update'
+
+
+    logger.info("---- update department  ----")
+    logger.info(f'content: {content}')
+
+    # parameterized queries, good for security and performance
+    statement ="""
+                UPDATE dep 
+                  SET local = %s
+                WHERE ndep = %s"""
+
+
+    values = (content["localidade"], content["ndep"])
+
+    try:
+        res = cur.execute(statement, values)
+        result = f'Updated: {cur.rowcount}'
+        cur.execute("commit")
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        result = 'Failed!'
+    finally:
+        if conn is not None:
+            conn.close()
+    return jsonify(result)
 
 
 
@@ -44,13 +131,13 @@ def get_all_users():
 ##########################################################
 
 def db_connection():
+
     db = psycopg2.connect(user = "aulaspl",
                             password = "aulaspl",
                             host = "db",
                             port = "5432",
                             database = "dbfichas")
     return db
-
 
 ##########################################################
 ## MAIN
@@ -71,17 +158,9 @@ if __name__ == "__main__":
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-
     time.sleep(1) # just to let the DB start before this print :-)
-
 
     logger.info("\n---------------------------------------------------------------\n" + 
                   "API v1.0 online: http://localhost:8080/departments/\n\n")
 
-
-    
-
     app.run(host="0.0.0.0", debug=True, threaded=True)
-
-
-

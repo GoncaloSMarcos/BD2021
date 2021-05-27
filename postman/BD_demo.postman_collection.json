@@ -4,25 +4,57 @@
 		"name": "BD_demo",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
-	"item": [{
+	"item": [
+		{
 		"name": "Obtain All Users",
 		"request": {
 			"method": "GET",
 			"header": [],
 			"url": {
-				"raw": "http://localhost:8080/utilizador/",
+				"raw": "http://localhost:8080/dbproj/user/",
 				"protocol": "http",
 				"host": [
 					"localhost"
 				],
 				"port": "8080",
 				"path": [
-					"utilizador",
-					""
+					"dbproj",
+					"user"
 				]
 			}
 		},
+		
 		"response": []
+	},
+	{
+		"name": "Registar Utilizador",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"UserTeste\", \n    \"email\": \"Email@teste.com\", \n    \"password\": \"PasswordTeste\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/user/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"user",
+						""
+					]
+				}
+			},
+			"response": []
 	}
 	]
 }
