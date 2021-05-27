@@ -1,21 +1,21 @@
 CREATE TABLE artigo (
-	id	 INTEGER,
+	id	 SERIAL,
 	nome	 VARCHAR(512) NOT NULL,
 	descricao VARCHAR(512) NOT NULL,
 	PRIMARY KEY(id)
 );
 
 CREATE TABLE leilao (
-	id_versao	 INTEGER,
+	id_leilao	 SERIAL,
 	titulo	 VARCHAR(512) NOT NULL,
 	momento_fim	 TIMESTAMP NOT NULL,
 	preco_minimo DOUBLE PRECISION NOT NULL,
 	descricao	 VARCHAR(1024) NOT NULL,
 	versao	 INTEGER NOT NULL,
-	id_leilao	 INTEGER NOT NULL,
+	id_familia	 SERIAL NOT NULL,
 	cancelled	 BOOL NOT NULL,
 	artigo_id	 INTEGER UNIQUE NOT NULL,
-	PRIMARY KEY(id_versao)
+	PRIMARY KEY(id_leilao)
 );
 
 CREATE TABLE utilizador (
@@ -24,44 +24,48 @@ CREATE TABLE utilizador (
 	password VARCHAR(512) NOT NULL,
 	banned	 BOOL NOT NULL DEFAULT false,
 	admin	 BOOL NOT NULL DEFAULT false,
+	authcode SERIAL UNIQUE NOT NULL,
 	PRIMARY KEY(username)
 );
 
 CREATE TABLE licitacao (
 	valor		 DOUBLE PRECISION NOT NULL,
-	utilizador_username	 VARCHAR(512),
-	leilao_id_versao INTEGER,
-	PRIMARY KEY(utilizador_username,leilao_id_versao)
+	utilizador_username VARCHAR(512),
+	leilao_id_leilao	 INTEGER,
+	PRIMARY KEY(utilizador_username,leilao_id_leilao)
 );
 
 CREATE TABLE mensagem (
-	id		 INTEGER,
-	conteudo	 VARCHAR(512) NOT NULL,
-	utilizador_username	 VARCHAR(512),
-	leilao_id_versao INTEGER,
-	PRIMARY KEY(id,utilizador_username,leilao_id_versao)
+	id			 SERIAL,
+	conteudo		 VARCHAR(512) NOT NULL,
+	utilizador_username VARCHAR(512),
+	leilao_id_leilao	 INTEGER,
+	PRIMARY KEY(id,utilizador_username,leilao_id_leilao)
 );
 
 CREATE TABLE notificacao (
-	id		 INTEGER,
-	conteudo	 VARCHAR(512) NOT NULL,
-	utilizador_username VARCHAR(512),
-	PRIMARY KEY(id,utilizador_username)
+	conteudo			 VARCHAR(512) NOT NULL,
+	utilizador_username		 VARCHAR(512) UNIQUE NOT NULL,
+	leilao_id_leilao		 INTEGER UNIQUE NOT NULL,
+	licitacao_utilizador_username VARCHAR(512),
+	licitacao_leilao_id_leilao	 INTEGER,
+	PRIMARY KEY(licitacao_utilizador_username,licitacao_leilao_id_leilao)
 );
 
 CREATE TABLE utilizador_leilao (
-	utilizador_username	 VARCHAR(512),
-	leilao_id_versao INTEGER,
-	PRIMARY KEY(utilizador_username,leilao_id_versao)
+	utilizador_username VARCHAR(512),
+	leilao_id_leilao	 INTEGER,
+	PRIMARY KEY(utilizador_username,leilao_id_leilao)
 );
 
 ALTER TABLE leilao ADD CONSTRAINT leilao_fk1 FOREIGN KEY (artigo_id) REFERENCES artigo(id);
 ALTER TABLE licitacao ADD CONSTRAINT licitacao_fk1 FOREIGN KEY (utilizador_username) REFERENCES utilizador(username);
-ALTER TABLE licitacao ADD CONSTRAINT licitacao_fk2 FOREIGN KEY (leilao_id_versao) REFERENCES leilao(id_versao);
+ALTER TABLE licitacao ADD CONSTRAINT licitacao_fk2 FOREIGN KEY (leilao_id_leilao) REFERENCES leilao(id_leilao);
 ALTER TABLE mensagem ADD CONSTRAINT mensagem_fk1 FOREIGN KEY (utilizador_username) REFERENCES utilizador(username);
-ALTER TABLE mensagem ADD CONSTRAINT mensagem_fk2 FOREIGN KEY (leilao_id_versao) REFERENCES leilao(id_versao);
+ALTER TABLE mensagem ADD CONSTRAINT mensagem_fk2 FOREIGN KEY (leilao_id_leilao) REFERENCES leilao(id_leilao);
 ALTER TABLE notificacao ADD CONSTRAINT notificacao_fk1 FOREIGN KEY (utilizador_username) REFERENCES utilizador(username);
+ALTER TABLE notificacao ADD CONSTRAINT notificacao_fk2 FOREIGN KEY (leilao_id_leilao) REFERENCES leilao(id_leilao);
+ALTER TABLE notificacao ADD CONSTRAINT notificacao_fk3 FOREIGN KEY (licitacao_utilizador_username) REFERENCES licitacao(utilizador_username);
+ALTER TABLE notificacao ADD CONSTRAINT notificacao_fk4 FOREIGN KEY (licitacao_leilao_id_leilao) REFERENCES licitacao(leilao_id_leilao);
 ALTER TABLE utilizador_leilao ADD CONSTRAINT utilizador_leilao_fk1 FOREIGN KEY (utilizador_username) REFERENCES utilizador(username);
-ALTER TABLE utilizador_leilao ADD CONSTRAINT utilizador_leilao_fk2 FOREIGN KEY (leilao_id_versao) REFERENCES leilao(id_versao);
-
-INSERT INTO utilizador VALUES('Jorge Sampaio', 'tijorgesamp@gmail.com', 'password123', false, false);
+ALTER TABLE utilizador_leilao ADD CONSTRAINT utilizador_leilao_fk2 FOREIGN KEY (leilao_id_leilao) REFERENCES leilao(id_leilao);

@@ -1,12 +1,12 @@
 from flask import Flask, jsonify, request
 import logging, psycopg2, time
 
-app = Flask(__name__) 
+app = Flask(__name__)
 
 
-@app.route('/') 
-def hello(): 
-    
+@app.route('/')
+def hello():
+
     return """
 
     Hello World!  <br/>
@@ -24,7 +24,7 @@ def hello():
 @app.route("/dbproj/user/", methods=['GET'])
 def get_all_users():
 
-    logger.info("###              GET /dbproj/user/              ###");   
+    logger.info("###              GET /dbproj/user/              ###");
 
     conn = db_connection()
     cur = conn.cursor()
@@ -46,19 +46,19 @@ def get_all_users():
 @app.route("/dbproj/leiloes/", methods=['GET'])
 def get_all_leiloes():
 
-    logger.info("###              GET /dbproj/leiloes/              ###");   
+    logger.info("###              GET /dbproj/leiloes/              ###");
 
     conn = db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_versao  FROM leilao")
+    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia  FROM leilao")
     rows = cur.fetchall()
 
     payload = []
     logger.debug("---- Leiloes  ----")
     for row in rows:
         logger.debug(row)
-        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_versao': row[5]}
+        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5]}
         payload.append(content) # appending to the payload to be returned
 
     conn.close()
@@ -71,7 +71,7 @@ def get_all_leiloes():
 @app.route("/dbproj/user/", methods=['POST'])
 def add_utilizador():
 
-    logger.info("###              POST /dbproj/user/              ###");   
+    logger.info("###              POST /dbproj/user/              ###");
     payload = request.get_json()
 
     conn = db_connection()
@@ -82,7 +82,7 @@ def add_utilizador():
 
     # parameterized queries, good for security and performance
     statement = """
-                  INSERT INTO utilizador (username, email, password, banned, admin) 
+                  INSERT INTO utilizador (username, email, password, banned, admin)
                           VALUES (%s, %s, %s, false, false)"""
 
     values = (payload["username"], payload["email"], payload["password"])
@@ -94,7 +94,7 @@ def add_utilizador():
 
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
-        result = {'erro': str(type(error))} 
+        result = {'erro': str(type(error))}
 
     finally:
         if conn is not None:
@@ -102,13 +102,52 @@ def add_utilizador():
 
     return jsonify(result)
 
+
+
+#ADD LEILAO
+@app.route("/dbproj/leilao/", methods=['POST'])
+def add_leilao():
+
+    logger.info("###              POST /dbproj/leilao/              ###");
+    payload = request.get_json()
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.info("---- novo leilao  ----")
+    logger.debug(f'payload: {payload}')
+
+    # parameterized queries, good for security and performance
+    statement = """
+                  INSERT INTO leilao (artigo_id, preco_minimo, titulo, descricao, momento_fim, versao, id_leilao, id_familia, cancelled)
+                          VALUES (%s, %s, %s, %s, %s, 1, %s, %s,false)"""
+
+    values = (payload["artigo_id"], payload["preco_minimo"], payload["titulo"], payload["descricao"], payload["momento_fim"], payload["id_leilao"], payload["id_familia"])
+
+    try:
+        cur.execute(statement, values)
+        cur.execute("commit")
+        result = {'id_leilao': payload["id_leilao"]}
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        result = {'erro': str(type(error))}
+
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return jsonify(result)
+
+
+
 ##########################################################
 ## PUTS
 ##########################################################
 
 @app.route("/dbproj/user/", methods=['PUT'])
 def update_departments():
-    logger.info("###               PUT /dbproj/user/              ###");   
+    logger.info("###               PUT /dbproj/user/              ###");
     content = request.get_json()
 
     conn = db_connection()
@@ -127,7 +166,7 @@ def update_departments():
 
     # parameterized queries, good for security and performance
     statement ="""
-                UPDATE dep 
+                UPDATE dep
                   SET local = %s
                 WHERE ndep = %s"""
 
@@ -182,7 +221,7 @@ if __name__ == "__main__":
 
     time.sleep(1) # just to let the DB start before this print :-)
 
-    logger.info("\n---------------------------------------------------------------\n" + 
+    logger.info("\n---------------------------------------------------------------\n" +
                   "API v1.0 online: http://localhost:8080/departments/\n\n")
 
     app.run(host="0.0.0.0", debug=True, threaded=True)
