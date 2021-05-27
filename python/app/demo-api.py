@@ -42,6 +42,29 @@ def get_all_users():
     conn.close()
     return jsonify(payload)
 
+
+@app.route("/dbproj/leiloes/", methods=['GET'])
+def get_all_leiloes():
+
+    logger.info("###              GET /dbproj/leiloes/              ###");   
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_versao  FROM leilao")
+    rows = cur.fetchall()
+
+    payload = []
+    logger.debug("---- Leiloes  ----")
+    for row in rows:
+        logger.debug(row)
+        content = {'username': row[0], 'email': row[1]}
+        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_versao': row[5]}
+        payload.append(content) # appending to the payload to be returned
+
+    conn.close()
+    return jsonify(payload)
+
 ##########################################################
 ## POSTS
 ##########################################################
