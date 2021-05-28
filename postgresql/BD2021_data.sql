@@ -14,7 +14,7 @@ CREATE TABLE leilao (
 	versao	 INTEGER NOT NULL,
 	id_familia	 SERIAL NOT NULL,
 	cancelled	 BOOL NOT NULL,
-	artigo_id	 INTEGER UNIQUE NOT NULL,
+	artigo_id	 INTEGER NOT NULL,
 	PRIMARY KEY(id_leilao)
 );
 
@@ -30,8 +30,8 @@ CREATE TABLE utilizador (
 
 CREATE TABLE licitacao (
 	valor		 DOUBLE PRECISION NOT NULL,
-	utilizador_username VARCHAR(512),
-	leilao_id_leilao	 INTEGER,
+	utilizador_username VARCHAR(512) UNIQUE NOT NULL,
+	leilao_id_leilao	 INTEGER UNIQUE NOT NULL,
 	PRIMARY KEY(utilizador_username,leilao_id_leilao)
 );
 

@@ -59,14 +59,14 @@ def get_all_leiloes():
 
     logger.debug("---- Leiloes  ----")
     
-    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia  FROM leilao")
+    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao FROM leilao")
     rows = cur.fetchall()
 
     payload = []
 
     for row in rows:
         logger.debug(row)
-        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5]}
+        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6]}
         payload.append(content) # appending to the payload to be returned
 
     conn.close()
@@ -129,10 +129,10 @@ def add_leilao():
 
     # parameterized queries, good for security and performance
     statement = """
-                  INSERT INTO leilao (artigo_id, preco_minimo, titulo, descricao, momento_fim, versao, id_leilao, id_familia, cancelled)
-                          VALUES (%s, %s, %s, %s, %s, 1, %s, %s,false)"""
+                  INSERT INTO leilao (id_leilao, titulo, momento_fim, preco_minimo, descricao, versao, id_familia, cancelled, artigo_id)
+                          VALUES (DEFAULT, %s, %s, %s, %s, 1, %s, false, %s)"""
 
-    values = (payload["artigo_id"], payload["preco_minimo"], payload["titulo"], payload["descricao"], payload["momento_fim"], payload["id_leilao"], payload["id_familia"])
+    values = (payload["titulo"], payload["momento_fim"], payload["preco_minimo"], payload["descricao"], payload["id_familia"], payload["artigo_id"])
 
     try:
         cur.execute(statement, values)
@@ -168,18 +168,13 @@ def login():
     logger.info("----  login  ----")
     logger.info(f'content: {content}')
     
-    statement = "SELECT password FROM utilizador WHERE utilizador.username = %s"           
-    values = [content["username"]]
+    statement = "SELECT count(*) FROM utilizador WHERE utilizador.username = %s AND utilizador.password = %s"           
+    values = [content["username"], content["password"]]
 
     cur.execute(statement, values)
-    password = cur.fetchall()
+    loggedIn = cur.fetchall()
 
-    if not password:
-        logger.error("Utilizador não existente")
-        result = {"erro": "Utilizador não existente"}
-
-    elif password[0][0] == content["password"]:
-
+    if loggedIn[0][0] == 1:
         statement = "SELECT authcode FROM utilizador WHERE utilizador.username = %s"           
         values = [content["username"]]
 
@@ -187,8 +182,8 @@ def login():
         result = {"authCode": cur.fetchall()[0][0]}
 
     else:
-        logger.error("Password errada")
-        result = {"erro": "Password errada"}
+        logger.error("Username ou password errados")
+        result = {"erro": "Username ou password errados"}
 
     conn.close()
     return jsonify(result)
@@ -202,25 +197,26 @@ def isLoggedIn(content):
     conn = db_connection()
     cur = conn.cursor()
 
-    if "username" not in content or "authcode" not in content:
-        return 'username and authcode are required to update'
+    if "authcode" not in content:
+        return 'authcode is required to verify login status'
     
     logger.info("----  AUX: isLoggedIn  ----")
     logger.info(f'content: {content}')
+    
+    statement = "SELECT count(*) FROM utilizador WHERE utilizador.authcode = %s"           
+    values = [content["authcode"]]
 
-    statement = "SELECT authcode FROM utilizador WHERE utilizador.username = %s"           
-    values = [content["username"]]
+    cur.execute(statement, values) 
+    count = cur.fetchall()
 
-    cur.execute(statement, values)
-    authcode = cur.fetchall()
-
-    if authcode and str(authcode[0][0]) == content["authcode"]:
-        conn.close()
-        return True
+    if count[0][0] == 1:
+        status = True
 
     else:
-        conn.close()
-        return False
+        status = False
+
+    conn.close()
+    return status
 
 ##########################################################
 ## DATABASE ACCESS
