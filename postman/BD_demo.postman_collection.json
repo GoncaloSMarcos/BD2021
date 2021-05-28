@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "f5ea8b36-d978-488f-a024-d195d5eaa915",
+		"_postman_id": "9620e520-daa8-47af-b57c-6419bfccca98",
 		"name": "BD_demo",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -11,7 +11,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/dbproj/user",
+					"raw": "http://localhost:8080/dbproj/user/",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -19,7 +19,29 @@
 					"port": "8080",
 					"path": [
 						"dbproj",
-						"user"
+						"user",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Artigos",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/dbproj/artigo/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"artigo",
+						""
 					]
 				}
 			},
@@ -59,7 +81,7 @@
 			"response": []
 		},
 		{
-			"name": "Registar Utilizador",
+			"name": "Adicionar Utilizador",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -82,6 +104,36 @@
 					"path": [
 						"dbproj",
 						"user",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Adicionar Artigo",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nome\": \"Artigo 1\", \n    \"descricao\": \"Descricao Artigo 1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/artigo/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"artigo",
 						""
 					]
 				}
