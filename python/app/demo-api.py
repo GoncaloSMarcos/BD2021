@@ -6,6 +6,9 @@ app = Flask(__name__)
 @app.route('/')
 def hello():
 
+@app.route('/')
+def hello():
+
     return """
 
     Hello World!  <br/>
@@ -24,7 +27,7 @@ def hello():
 @app.route("/dbproj/user/", methods=['GET'])
 def get_all_users():
 
-    logger.info("###              GET /dbproj/user/              ###") 
+    logger.info("###              GET /dbproj/user/              ###")
 
     conn = db_connection()
     cur = conn.cursor()
@@ -48,7 +51,7 @@ def get_all_users():
 @app.route("/dbproj/leiloes/", methods=['GET'])
 def get_all_leiloes():
 
-    logger.info("###              GET /dbproj/leiloes/              ###") 
+    logger.info("###              GET /dbproj/leiloes/              ###")
     payload = request.get_json()
 
     if not isLoggedIn(payload):
@@ -58,7 +61,7 @@ def get_all_leiloes():
     cur = conn.cursor()
 
     logger.debug("----  Leiloes  ----")
-    
+
     cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao FROM leilao")
     rows = cur.fetchall()
 
@@ -76,7 +79,7 @@ def get_all_leiloes():
 @app.route("/dbproj/artigo/", methods=['GET'])
 def get_all_artigos():
 
-    logger.info("###              GET /dbproj/artigo/              ###") 
+    logger.info("###              GET /dbproj/artigo/              ###")
 
     conn = db_connection()
     cur = conn.cursor()
@@ -102,7 +105,7 @@ def get_all_artigos():
 @app.route("/dbproj/leiloes/{keyword}", methods=['GET'])
 def get_leilao():
 
-    logger.info("###              GET  /dbproj/leiloes/{keyword}             ###");
+    logger.info("###              GET  /dbproj/leiloes/{keyword}             ###")
 
     conn = db_connection()
     cur = conn.cursor()
@@ -131,7 +134,7 @@ def get_leilao():
 @app.route("/dbproj/user/", methods=['POST'])
 def add_utilizador():
 
-    logger.info("###              POST /dbproj/user/              ###") 
+    logger.info("###              POST /dbproj/user/              ###")
     payload = request.get_json()
 
     conn = db_connection()
@@ -204,7 +207,7 @@ def add_leilao():
 @app.route("/dbproj/artigo/", methods=['POST'])
 def add_artigo():
 
-    logger.info("###              POST /dbproj/artigo/              ###") 
+    logger.info("###              POST /dbproj/artigo/              ###")
     payload = request.get_json()
 
     conn = db_connection()
@@ -253,15 +256,15 @@ def login():
 
     logger.info("----  login  ----")
     logger.info(f'content: {content}')
-    
-    statement = "SELECT count(*) FROM utilizador WHERE utilizador.username = %s AND utilizador.password = %s"           
+
+    statement = "SELECT count(*) FROM utilizador WHERE utilizador.username = %s AND utilizador.password = %s"
     values = [content["username"], content["password"]]
 
     cur.execute(statement, values)
     loggedIn = cur.fetchall()
 
     if loggedIn[0][0] == 1:
-        statement = "SELECT authcode FROM utilizador WHERE utilizador.username = %s"           
+        statement = "SELECT authcode FROM utilizador WHERE utilizador.username = %s"
         values = [content["username"]]
 
         cur.execute(statement, values)
@@ -285,14 +288,14 @@ def isLoggedIn(content):
 
     if "authcode" not in content:
         return 'authcode is required to verify login status'
-    
+
     logger.info("----  AUX: isLoggedIn  ----")
     logger.info(f'content: {content}')
-    
-    statement = "SELECT count(*) FROM utilizador WHERE utilizador.authcode = %s"           
+
+    statement = "SELECT count(*) FROM utilizador WHERE utilizador.authcode = %s"
     values = [content["authcode"]]
 
-    cur.execute(statement, values) 
+    cur.execute(statement, values)
     count = cur.fetchall()
 
     if count[0][0] == 1:
