@@ -75,6 +75,36 @@ def get_all_leiloes():
     conn.close()
     return jsonify(payload)
 
+@app.route("/dbproj/leiloes/<id_leilao>", methods=['GET'])
+def get_leilao(id_leilao):
+    logger.info("###              DEMO: GET /leilao/<id_leilao>              ###");   
+
+    logger.debug(f'id_leilao: {id_leilao}')
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+
+    try:
+        cur.execute("SELECT id_leilao, titulo FROM leilao where id_leilao = %s", (id_leilao,) )
+        rows = cur.fetchall()
+        
+        row = rows[0]
+
+        logger.debug("---- selected leilao  ----")
+        logger.debug(row)
+        content = {'id_leilao': int(row[0]), 'titulo': row[1]}
+
+        conn.close ()
+        return jsonify(content)
+
+    except (Exception) as error:
+        logger.debug("Este aqui mesmo:")
+        logger.error(error)
+        logger.error(type(error))
+        
+        return jsonify('ERROR: Leilao missing from database!')
+
 #GET ALL ARTIGOS
 @app.route("/dbproj/artigo/", methods=['GET'])
 def get_all_artigos():
