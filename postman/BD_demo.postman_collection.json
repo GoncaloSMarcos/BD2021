@@ -65,7 +65,39 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/dbproj/leiloes/",
+					"raw": "http://localhost:8080/dbproj/leiloes",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"leiloes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Mostrar Leilao",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/leiloes/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -74,7 +106,7 @@
 					"path": [
 						"dbproj",
 						"leiloes",
-						""
+						"1"
 					]
 				}
 			},
@@ -117,7 +149,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"nome\": \"Artigo 1\", \n    \"descricao\": \"Descricao Artigo 1\"\n}",
+					"raw": "{\n    \"nome\": \"Artigo 3\", \n    \"descricao\": \"Descricao Artigo 3\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
