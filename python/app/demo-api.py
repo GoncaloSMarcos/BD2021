@@ -96,6 +96,33 @@ def get_all_artigos():
     conn.close()
     return jsonify(payload)
 
+
+
+
+@app.route("/dbproj/leiloes/{keyword}", methods=['GET'])
+def get_leilao():
+
+    logger.info("###              GET  /dbproj/leiloes/{keyword}             ###");
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia  FROM leilao")
+    rows = cur.fetchall()
+
+    payload = []
+    logger.debug("---- Leiloes  ----")
+    for row in rows:
+        logger.debug(row)
+        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5]}
+        payload.append(content) # appending to the payload to be returned
+
+    conn.close()
+    return jsonify(payload)
+
+
+
+
 ##########################################################
 ## POSTS
 ##########################################################
