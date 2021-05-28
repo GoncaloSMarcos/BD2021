@@ -3,8 +3,6 @@ import logging, psycopg2, time
 
 app = Flask(__name__)
 
-@app.route('/')
-def hello():
 
 @app.route('/')
 def hello():
@@ -47,6 +45,8 @@ def get_all_users():
     conn.close()
     return jsonify(payload)
 
+
+
 #GET ALL LEILOES
 @app.route("/dbproj/leiloes/", methods=['GET'])
 def get_all_leiloes():
@@ -75,9 +75,12 @@ def get_all_leiloes():
     conn.close()
     return jsonify(payload)
 
-@app.route("/dbproj/leiloes/<id_leilao>", methods=['GET'])
+
+
+#GET LEILAO BY ID
+@app.route("/dbproj/leilao/<id_leilao>", methods=['GET'])
 def get_leilao(id_leilao):
-    logger.info("###              DEMO: GET /leilao/<id_leilao>              ###");   
+    logger.info("###              DEMO: GET /leilao/<id_leilao>              ###");
 
     logger.debug(f'id_leilao: {id_leilao}')
 
@@ -88,7 +91,7 @@ def get_leilao(id_leilao):
     try:
         cur.execute("SELECT id_leilao, titulo FROM leilao where id_leilao = %s", (id_leilao,) )
         rows = cur.fetchall()
-        
+
         row = rows[0]
 
         logger.debug("---- selected leilao  ----")
@@ -102,8 +105,10 @@ def get_leilao(id_leilao):
         logger.debug("Este aqui mesmo:")
         logger.error(error)
         logger.error(type(error))
-        
+
         return jsonify('ERROR: Leilao missing from database!')
+
+
 
 #GET ALL ARTIGOS
 @app.route("/dbproj/artigo/", methods=['GET'])
@@ -132,26 +137,38 @@ def get_all_artigos():
 
 
 
-@app.route("/dbproj/leiloes/{keyword}", methods=['GET'])
-def get_leilao():
 
-    logger.info("###              GET  /dbproj/leiloes/{keyword}             ###")
+#GET LEILAO BY ID
+@app.route("/dbproj/leiloes/<keyword>", methods=['GET'])
+def get_leilao_keyword(keyword):
+    logger.info("###              DEMO: GET /leiloes/<keyword>              ###");
+
+    logger.debug(f'keyword: {keyword}')
 
     conn = db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia  FROM leilao")
-    rows = cur.fetchall()
 
-    payload = []
-    logger.debug("---- Leiloes  ----")
-    for row in rows:
+    try:
+        cur.execute(f" SELECT id_leilao, descricao FROM leilao WHERE CAST(id_leilao as VARCHAR(10)) = '{keyword}' OR descricao LIKE '%{keyword}%'")      #id_leilao*1 = id_leilao significa se e numerico
+        rows = cur.fetchall()
+
+        row = rows[0]
+
+        logger.debug("---- selected leilao  ----")
         logger.debug(row)
-        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5]}
-        payload.append(content) # appending to the payload to be returned
+        content = {'id_leilao': int(row[0]), 'descricao': row[1]}
 
-    conn.close()
-    return jsonify(payload)
+        conn.close ()
+        return jsonify(content)
+
+    except (Exception) as error:
+        logger.debug("Este aqui mesmo:")
+        logger.error(error)
+        logger.error(type(error))
+
+        return jsonify('ERROR: Leilao missing from database!')
+
 
 
 

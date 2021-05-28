@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "3732a5f7-596e-4a68-8b02-b646b5f3594b",
+		"_postman_id": "f5ea8b36-d978-488f-a024-d195d5eaa915",
 		"name": "BD_demo",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -96,39 +96,6 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/dbproj/leilao/1",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"dbproj",
-						"leilao",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Pesquisar Leilao por Keyword",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"authcode\": \"1\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
 					"raw": "http://localhost:8080/dbproj/leiloes/1",
 					"protocol": "http",
 					"host": [
@@ -181,7 +148,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"nome\": \"Artigo 1\", \n    \"descricao\": \"Descricao Artigo 1\"\n}",
+					"raw": "{\n    \"nome\": \"Artigo 3\", \n    \"descricao\": \"Descricao Artigo 3\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -241,7 +208,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"username\": \"UserTesteAA\",\n    \"password\": \"PasswordTeste\"\n}",
+					"raw": "{\n    \"username\": \"UserTeste\",\n    \"password\": \"PasswordTeste\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
