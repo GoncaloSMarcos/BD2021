@@ -31,14 +31,14 @@ def get_all_users():
 
     logger.debug("---- Utilizadores  ----")
 
-    cur.execute("SELECT username, email FROM utilizador")
+    cur.execute("SELECT * FROM utilizador")
     rows = cur.fetchall()
 
     payload = []
 
     for row in rows:
         logger.debug(row)
-        content = {'username': row[0], 'email': row[1]}
+        content = {'username': row[0], 'email': row[1], 'password': row[2], 'banned': row[3], 'admin': row[4], 'authcode': row[5]}
         payload.append(content) # appending to the payload to be returned
 
     conn.close()
@@ -57,7 +57,7 @@ def get_all_leiloes():
     conn = db_connection()
     cur = conn.cursor()
 
-    logger.debug("---- Leiloes  ----")
+    logger.debug("----  Leiloes  ----")
     
     cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao FROM leilao")
     rows = cur.fetchall()
@@ -91,8 +91,8 @@ def add_utilizador():
 
     # parameterized queries, good for security and performance
     statement = """
-                  INSERT INTO utilizador (username, email, password, banned, admin)
-                          VALUES (%s, %s, %s, false, false)"""
+                  INSERT INTO utilizador (username, email, password, banned, admin, authcode)
+                          VALUES (%s, %s, %s, false, false, DEFAULT)"""
 
     values = (payload["username"], payload["email"], payload["password"])
 
