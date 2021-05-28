@@ -72,6 +72,30 @@ def get_all_leiloes():
     conn.close()
     return jsonify(payload)
 
+#GET ALL ARTIGOS
+@app.route("/dbproj/artigo/", methods=['GET'])
+def get_all_artigos():
+
+    logger.info("###              GET /dbproj/artigo/              ###") 
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.debug("---- Artigos  ----")
+
+    cur.execute("SELECT * FROM artigo")
+    rows = cur.fetchall()
+
+    payload = []
+
+    for row in rows:
+        logger.debug(row)
+        content = {'id': row[0], 'nome': row[1], 'descricao': row[2]}
+        payload.append(content) # appending to the payload to be returned
+
+    conn.close()
+    return jsonify(payload)
+
 ##########################################################
 ## POSTS
 ##########################################################
@@ -138,6 +162,41 @@ def add_leilao():
         cur.execute(statement, values)
         cur.execute("commit")
         result = {'id_leilao': payload["id_leilao"]}
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        result = {'erro': str(type(error))}
+
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return jsonify(result)
+
+#ADD ARTIGO
+@app.route("/dbproj/artigo/", methods=['POST'])
+def add_artigo():
+
+    logger.info("###              POST /dbproj/artigo/              ###") 
+    payload = request.get_json()
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.info("---- novo artigo  ----")
+    logger.debug(f'payload: {payload}')
+
+    # parameterized queries, good for security and performance
+    statement = """
+                  INSERT INTO artigo (id, nome, descricao)
+                          VALUES (DEFAULT, %s, %s)"""
+
+    values = (payload["nome"], payload["descricao"])
+
+    try:
+        cur.execute(statement, values)
+        cur.execute("commit")
+        result = {'artigoNome': payload["nome"]}
 
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
