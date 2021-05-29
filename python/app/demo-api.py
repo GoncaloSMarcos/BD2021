@@ -340,6 +340,41 @@ def login():
     conn.close()
     return jsonify(result)
 
+# EDIT LEILAO
+@app.route("/dbproj/leilao/<id_leilao>", methods=['PUT'])
+def edit_leilao(id_leilao):
+    logger.info("###              PUT /dbproj/leilao/              ###")
+    payload = request.get_json()
+
+    if not isLoggedIn(payload):
+        return jsonify({"authError": "Please log in before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.info("---- editar leilao  ----")
+    logger.debug(f'payload: {payload}')
+
+    # parameterized queries, good for security and performance
+    statement = """
+                  INSERT INTO leilao (id_leilao, titulo, momento_fim, preco_minimo, descricao, versao, id_familia, cancelled, artigo_id)
+                          VALUES (DEFAULT, %s, %s, %s, %s, 2, %s, false, %s)"""
+
+    cur.execute("SELECT edit_leilao(%s, %s, %s, %s, %s, %s);", (payload["titulo"], payload["momento_fim"], payload["preco_minimo"], payload["descricao"], id_leilao, payload["artigo_id"]))
+    sucessful = cur.fetchall()
+    
+    logger.debug(f'sucessful: {sucessful}')
+
+    if sucessful[0][0]:
+        cur.execute("commit")
+        result = 'Teste: Sucedido!'
+    else:
+        result = 'Teste: Failed!' 
+        
+    conn.close ()
+    return jsonify(result)
+
+    
 ##########################################################
 ## AUXILIARY FUNCTIONS
 ##########################################################

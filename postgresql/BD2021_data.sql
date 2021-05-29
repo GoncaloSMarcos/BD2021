@@ -30,8 +30,8 @@ CREATE TABLE utilizador (
 
 CREATE TABLE licitacao (
 	valor		 DOUBLE PRECISION NOT NULL,
-	utilizador_username VARCHAR(512) NOT NULL,
-	leilao_id_leilao	 INTEGER NOT NULL,
+	utilizador_username VARCHAR(512) UNIQUE NOT NULL,
+	leilao_id_leilao	 INTEGER UNIQUE NOT NULL,
 	PRIMARY KEY(utilizador_username,leilao_id_leilao)
 );
 
@@ -108,4 +108,27 @@ BEGIN
    	 	RETURN false;
 	END IF;
 END;
+$$;
+
+CREATE OR REPLACE FUNCTION edit_leilao(v_titulo VARCHAR, v_momento_fim TIMESTAMP, v_preco_minimo INTEGER, v_descricao VARCHAR, v_id_leilao INTEGER, v_artigo_id INTEGER)
+RETURNS BOOL
+LANGUAGE plpgsql
+AS
 $$
+DECLARE
+	v_versao INTEGER;
+BEGIN
+	-- get versao do leilao
+	SELECT versao
+   	INTO v_versao
+   	FROM leilao
+   	WHERE leilao.id_leilao = v_id_leilao;
+
+	-- atualizar versao
+	v_versao := v_versao + 1;
+
+	INSERT INTO leilao (id_leilao, titulo, momento_fim, preco_minimo, descricao, versao, id_familia, cancelled, artigo_id)
+	VALUES (DEFAULT, v_titulo, v_momento_fim, v_preco_minimo, v_descricao, v_versao, v_id_leilao, false, v_artigo_id);
+	RETURN true;
+END;
+$$;

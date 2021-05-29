@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "3732a5f7-596e-4a68-8b02-b646b5f3594b",
+		"_postman_id": "884d91a3-b8a4-488f-bb58-b1bdb39f6ed6",
 		"name": "BD_demo",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -293,6 +293,36 @@
 						"dbproj",
 						"user",
 						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Editar Leilao",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"titulo\": \"Leilao1 editado\",\n    \"momento_fim\":\"2021-05-27\",\n    \"preco_minimo\": 22,\n    \"descricao\":\"este e o primeiro leilao editado\",\n    \"id_leilao\":\"1\",\n    \"artigo_id\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/leilao/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"leilao",
+						"1"
 					]
 				}
 			},
