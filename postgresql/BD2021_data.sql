@@ -14,7 +14,7 @@ CREATE TABLE leilao (
 	versao	 INTEGER NOT NULL,
 	id_familia	 INTEGER NOT NULL,
 	cancelled	 BOOL NOT NULL,
-	artigo_id	 INTEGER UNIQUE NOT NULL,
+	artigo_id	 INTEGER NOT NULL,
 	PRIMARY KEY(id_leilao)
 );
 
