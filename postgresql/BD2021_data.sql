@@ -30,8 +30,8 @@ CREATE TABLE utilizador (
 
 CREATE TABLE licitacao (
 	valor		 DOUBLE PRECISION NOT NULL,
-	utilizador_username VARCHAR(512) UNIQUE NOT NULL,
-	leilao_id_leilao	 INTEGER UNIQUE NOT NULL,
+	utilizador_username VARCHAR(512) NOT NULL,
+	leilao_id_leilao	 INTEGER NOT NULL,
 	PRIMARY KEY(utilizador_username,leilao_id_leilao)
 );
 
@@ -75,7 +75,7 @@ RETURNS BOOL
 LANGUAGE plpgsql
 AS
 $$
-DECLARE 
+DECLARE
 	v_username VARCHAR(512);
 	v_preco_minimo INTEGER;
 	v_licitacao_atual INTEGER;
@@ -83,7 +83,7 @@ DECLARE
 
 BEGIN
  	-- get username from authcode
-	SELECT username 
+	SELECT username
    	INTO v_username
    	FROM utilizador
    	WHERE utilizador.authcode = v_authcode;
@@ -106,6 +106,6 @@ BEGIN
 		RETURN true;
 	ELSE
    	 	RETURN false;
-	END IF;	
+	END IF;
 END;
 $$
