@@ -131,3 +131,23 @@ BEGIN
 	RETURN true;
 END;
 $$;
+
+
+CREATE OR REPLACE FUNCTION add_message(v_id_leilao INTEGER, v_conteudo VARCHAR, v_authcode INTEGER)
+RETURNS BOOL
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+	v_username VARCHAR;
+BEGIN
+  -- obter username atraves de authCode
+	SELECT username
+	INTO v_username
+	FROM utilizador
+	WHERE utilizador.authcode = v_authcode;
+	-- inserir mensagem no mural do leilao
+	INSERT into mensagem VALUES(DEFAULT, v_conteudo, v_username, v_id_leilao);
+	RETURN true;
+END;
+$$;

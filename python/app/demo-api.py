@@ -163,13 +163,13 @@ def get_leilao_keyword(keyword):
 #EFETUAR LICITACAO
 @app.route("/dbproj/licitar/<leilaoId>/<licitacao>", methods=['GET'])
 def licitar(leilaoId, licitacao):
-    
+
     logger.info("###              GET /dbproj/licitar/<leilaoId>/<licitacao>              ###");
     logger.debug(f'leilaoId: {leilaoId}')
     logger.debug(f'licitacao: {licitacao}')
-    
+
     payload = request.get_json()
-    
+
     if not isLoggedIn(payload):
         return jsonify({"authError": "Please log in before executing this"})
 
@@ -178,15 +178,15 @@ def licitar(leilaoId, licitacao):
 
     cur.execute("SELECT licitar(%s, %s, %s);", (licitacao, payload["authcode"], leilaoId))
     sucessful = cur.fetchall()
-    
+
     logger.debug(f'sucessful: {sucessful}')
 
     if sucessful[0][0]:
         cur.execute("commit")
         result = 'Teste: Sucedido!'
     else:
-        result = 'Teste: Failed!' 
-    
+        result = 'Teste: Failed!'
+
     conn.close ()
     return jsonify(result)
 
@@ -303,6 +303,37 @@ def add_artigo():
 
     return jsonify(result)
 
+
+
+
+
+@app.route("/dbproj/leilao/message", methods=['POST'])
+def add_message_to_leilao():
+
+    logger.info("###              GET /dbproj/leilao/message              ###");
+    payload = request.get_json()
+    logger.debug(f'leilaoId: {payload["id_leilao"]}')
+
+    if not isLoggedIn(payload):
+        return jsonify({"authError": "Please log in before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT add_message(%s, %s, %s);", (payload["id_leilao"], payload["conteudo"],payload["authcode"]))
+    sucessful = cur.fetchall()
+
+    logger.debug(f'sucessful: {sucessful}')
+
+    if sucessful[0][0]:
+        cur.execute("commit")
+        result = 'Teste: Sucedido!'
+    else:
+        result = 'Teste: Failed!'
+
+    conn.close ()
+    return jsonify(result)
+
 ##########################################################
 ## PUTS
 ##########################################################
@@ -364,15 +395,15 @@ def edit_leilao(id_leilao):
 
     cur.execute("SELECT edit_leilao(%s, %s, %s, %s, %s, %s);", (payload["titulo"], payload["momento_fim"], payload["preco_minimo"], payload["descricao"], id_leilao, payload["artigo_id"]))
     sucessful = cur.fetchall()
-    
+
     logger.debug(f'sucessful: {sucessful}')
 
     if sucessful[0][0]:
         cur.execute("commit")
         result = 'Teste: Sucedido!'
     else:
-        result = 'Teste: Failed!' 
-        
+        result = 'Teste: Failed!'
+
     conn.close ()
     return jsonify(result)
 
