@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "0c2c81d0-1e3d-4ed2-a94a-4c0dda83fa51",
+		"_postman_id": "884d91a3-b8a4-488f-bb58-b1bdb39f6ed6",
 		"name": "BD_demo",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -263,36 +263,6 @@
 						"dbproj",
 						"leilao",
 						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Adicionar Mensagem",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"id_leilao\":\"1\",\n    \"conteudo\":\"Segunda mensagem!!!\",\n    \"authcode\": \"1\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/dbproj/leilao/message",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"dbproj",
-						"leilao",
-						"message"
 					]
 				}
 			},
