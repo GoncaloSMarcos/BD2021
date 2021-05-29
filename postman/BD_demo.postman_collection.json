@@ -112,6 +112,40 @@
 			"response": []
 		},
 		{
+			"name": "Licitar",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/licitar/1/100",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"licitar",
+						"1",
+						"100"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Pesquisar Leilao por Keyword",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true

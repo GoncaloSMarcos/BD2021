@@ -1,8 +1,8 @@
+from os import replace
 from flask import Flask, jsonify, request
 import logging, psycopg2, time
 
 app = Flask(__name__)
-
 
 @app.route('/')
 def hello():
@@ -45,8 +45,6 @@ def get_all_users():
     conn.close()
     return jsonify(payload)
 
-
-
 #GET ALL LEILOES
 @app.route("/dbproj/leiloes/", methods=['GET'])
 def get_all_leiloes():
@@ -74,8 +72,6 @@ def get_all_leiloes():
 
     conn.close()
     return jsonify(payload)
-
-
 
 #GET LEILAO BY ID
 @app.route("/dbproj/leilao/<id_leilao>", methods=['GET'])
@@ -108,8 +104,6 @@ def get_leilao(id_leilao):
 
         return jsonify('ERROR: Leilao missing from database!')
 
-
-
 #GET ALL ARTIGOS
 @app.route("/dbproj/artigo/", methods=['GET'])
 def get_all_artigos():
@@ -134,13 +128,10 @@ def get_all_artigos():
     conn.close()
     return jsonify(payload)
 
-
-
-
-
 #GET LEILAO BY ID
 @app.route("/dbproj/leiloes/<keyword>", methods=['GET'])
 def get_leilao_keyword(keyword):
+
     logger.info("###              DEMO: GET /leiloes/<keyword>              ###");
 
     logger.debug(f'keyword: {keyword}')
@@ -148,9 +139,8 @@ def get_leilao_keyword(keyword):
     conn = db_connection()
     cur = conn.cursor()
 
-
     try:
-        cur.execute(f" SELECT id_leilao, descricao FROM leilao WHERE CAST(id_leilao as VARCHAR(10)) = '{keyword}' OR descricao LIKE '%{keyword}%'")      #id_leilao*1 = id_leilao significa se e numerico
+        cur.execute(f"SELECT id_leilao, descricao FROM leilao WHERE CAST(id_leilao as VARCHAR(10)) = '{keyword}' OR descricao LIKE '%{keyword}%'")      #id_leilao*1 = id_leilao significa se e numerico
         rows = cur.fetchall()
 
         row = rows[0]
@@ -163,14 +153,40 @@ def get_leilao_keyword(keyword):
         return jsonify(content)
 
     except (Exception) as error:
-        logger.debug("Este aqui mesmo:")
         logger.error(error)
         logger.error(type(error))
 
         return jsonify('ERROR: Leilao missing from database!')
 
+#EFETUAR LICITACAO
+@app.route("/dbproj/licitar/<leilaoId>/<licitacao>", methods=['GET'])
+def licitar(leilaoId, licitacao):
+    
+    logger.info("###              GET /dbproj/licitar/<leilaoId>/<licitacao>              ###");
+    logger.debug(f'leilaoId: {leilaoId}')
+    logger.debug(f'licitacao: {licitacao}')
+    
+    payload = request.get_json()
+    
+    if not isLoggedIn(payload):
+        return jsonify({"authError": "Please log in before executing this"})
 
+    conn = db_connection()
+    cur = conn.cursor()
 
+    cur.execute("SELECT licitar(%s, %s, %s);", (licitacao, payload["authcode"], leilaoId))
+    sucessful = cur.fetchall()
+    
+    logger.debug(f'sucessful: {sucessful}')
+
+    if sucessful[0][0]:
+        cur.execute("commit")
+        result = 'Teste: Sucedido!'
+    else:
+        result = 'Teste: Failed!' 
+    
+    conn.close ()
+    return jsonify(result)
 
 
 ##########################################################
