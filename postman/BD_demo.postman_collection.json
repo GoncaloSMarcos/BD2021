@@ -185,7 +185,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"username\": \"UserTesteAA\", \n    \"email\": \"Email@teste.com\", \n    \"password\": \"PasswordTeste\"\n}",
+					"raw": "{\n    \"username\": \"UserTesteAA\", \n    \"email\": \"Email@teste.com\", \n    \"password\": \"PasswordTeste\",\n    \"admin\": true\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -323,6 +323,37 @@
 						"dbproj",
 						"leilao",
 						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cancelar Leilao",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/leilao/1/cancel",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"leilao",
+						"1",
+						"cancel"
 					]
 				}
 			},

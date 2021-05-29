@@ -85,14 +85,16 @@ def get_leilao(id_leilao):
 
 
     try:
-        cur.execute("SELECT id_leilao, titulo FROM leilao where id_leilao = %s", (id_leilao,) )
+        cur.execute("""SELECT id_leilao, titulo, momento_fim, preco_minimo, descricao, cancelled, artigo_id
+                    FROM leilao 
+                    WHERE id_leilao = %s""", (id_leilao,) )
         rows = cur.fetchall()
 
         row = rows[0]
 
         logger.debug("---- selected leilao  ----")
         logger.debug(row)
-        content = {'id_leilao': int(row[0]), 'titulo': row[1]}
+        content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'cancelled': row[5], 'artigo_id': int(row[6])}
 
         conn.close ()
         return jsonify(content)
@@ -128,7 +130,7 @@ def get_all_artigos():
     conn.close()
     return jsonify(payload)
 
-#GET LEILAO BY ID
+#GET LEILAO BY KEYWORD
 @app.route("/dbproj/leiloes/<keyword>", methods=['GET'])
 def get_leilao_keyword(keyword):
 
@@ -209,9 +211,9 @@ def add_utilizador():
     # parameterized queries, good for security and performance
     statement = """
                   INSERT INTO utilizador (username, email, password, banned, admin, authcode)
-                          VALUES (%s, %s, %s, false, false, DEFAULT)"""
+                          VALUES (%s, %s, %s, false, %s, DEFAULT)"""
 
-    values = (payload["username"], payload["email"], payload["password"])
+    values = (payload["username"], payload["email"], payload["password"], payload["admin"])
 
     try:
         cur.execute(statement, values)
@@ -374,13 +376,50 @@ def edit_leilao(id_leilao):
     conn.close ()
     return jsonify(result)
 
+# CANCELAR LEILAO
+@app.route("/dbproj/leilao/<id_leilao>/cancel", methods=['PUT'])
+def cancel_leilao(id_leilao):
+    logger.info("###              PUT /dbproj/leilao/<id_leilao>/cancel              ###")
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Admin permissions needed"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.info("---- editar leilao  ----")
+    logger.debug(f'payload: {payload}')
+
+    # parameterized queries, good for security and performance
+    statement ="""
+                UPDATE leilao 
+                  SET cancelled = %s
+                WHERE id_leilao = %s"""
+
+
+    values = (True, id_leilao)
+    
+    try:
+        res = cur.execute(statement, values)
+        result = f'Updated: {cur.rowcount}'
+        cur.execute("commit")
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        result = 'Failed!'
+    finally:
+        if conn is not None:
+            conn.close()
+    
+    return jsonify(result)
+
     
 ##########################################################
 ## AUXILIARY FUNCTIONS
 ##########################################################
 
 def isLoggedIn(content):
-
+    
     conn = db_connection()
     cur = conn.cursor()
 
@@ -404,6 +443,25 @@ def isLoggedIn(content):
 
     conn.close()
     return status
+
+def isAdmin(content):
+    
+    if not isLoggedIn(content):
+        return jsonify({"authError": "Please log in before executing this"})
+    
+    else:
+        conn = db_connection()
+        cur = conn.cursor()
+        statement = "SELECT admin FROM utilizador WHERE utilizador.authcode = %s"
+        values = [content["authcode"]]
+        cur.execute(statement, values)
+        admin = cur.fetchall()
+            
+        if admin[0][0] == True:
+            return True;
+        else:
+            return False;
+        conn.close()
 
 ##########################################################
 ## DATABASE ACCESS
