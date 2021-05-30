@@ -88,7 +88,7 @@ def get_leilao(id_leilao):
         rows = cur.fetchall()
         row = rows[0]
 
-        content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'artigo_id': int(row[6]), 'creator_username': row[7]}
+        content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'artigo_id': int(row[5]), 'creator_username': row[6]}
 
         conn.close ()
         return jsonify(content)
