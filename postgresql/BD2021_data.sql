@@ -216,8 +216,12 @@ BEGIN
 	WHERE utilizador.authcode = v_authcode;
 
 	-- get leiloes criados ou leiloes nos quais o user participou DOES NOT WORK
-	RETURN QUERY SELECT versao, titulo, descricao, preco_minimo, momento_fim
-				 FROM leilao, licitacao
-				 WHERE (leilao.creator_username = v_username OR licitacao.utilizador_username = v_username) AND licitacao.leilao_id_leilao = leilao.id_leilao;
+	RETURN QUERY SELECT versao, titulo, descricao, preco_minimo, momento_fim 
+				 FROM leilao 
+				 WHERE leilao.creator_username = 'UserTeste'
+				 UNION
+				 SELECT versao, titulo, descricao, preco_minimo, momento_fim 
+				 FROM leilao, licitacao 
+				 WHERE licitacao.utilizador_username = 'UserTeste' AND licitacao.leilao_id_leilao = leilao.id_leilao;
 END;
 $$;

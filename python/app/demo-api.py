@@ -206,15 +206,13 @@ def get_atividade():
     cur = conn.cursor()
 
     try:
-        cur.execute("SELECT get_atividade(%s);", (payload["authcode"],)) 
+        cur.execute("SELECT * FROM get_atividade(%s);", (payload["authcode"],)) 
         rows = cur.fetchall()
-
-        logger.debug(rows)
 
         output = []
 
         for row in rows:
-            content = {'id_leilao': int(row[0]), 'descricao': row[1]}
+            content = {'versao': int(row[0]), 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4]}
             output.append(content)
 
         conn.close ()
