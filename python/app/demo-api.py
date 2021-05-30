@@ -55,13 +55,13 @@ def get_all_leiloes():
     conn = db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id FROM leilao")
+    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id, cancelled FROM leilao")
     rows = cur.fetchall()
 
     payload = []
 
     for row in rows:
-        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8])}
+        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': getHighestBidder(row[0])[0][0][1], 'highestBidder': getHighestBidder(row[0])[1][0][0]}
         payload.append(content) # appending to the payload to be returned
 
     conn.close()
@@ -88,7 +88,7 @@ def get_leilao(id_leilao):
         rows = cur.fetchall()
         row = rows[0]
 
-        content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'artigo_id': int(row[5]), 'creator_username': row[6]}
+        content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'artigo_id': int(row[5]), 'creator_username': row[6], 'highestBid': getHighestBidder(row[0])[0][0][1], 'highestBidder': getHighestBidder(row[0])[1][0][0]}
 
         conn.close ()
         return jsonify(content)
@@ -138,13 +138,13 @@ def get_leilao_keyword(keyword):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"SELECT id_leilao, descricao FROM leilao WHERE (CAST(id_leilao as VARCHAR(10)) = '{keyword}' OR descricao LIKE '%{keyword}%') AND leilao.cancelled = false")      #id_leilao*1 = id_leilao significa se e numerico
+        cur.execute(f"SELECT id_leilao, titulo, momento_fim, preco_minimo, descricao, artigo_id, creator_username FROM leilao WHERE (CAST(id_leilao as VARCHAR(10)) = '{keyword}' OR descricao LIKE '%{keyword}%') AND leilao.cancelled = false")      #id_leilao*1 = id_leilao significa se e numerico
         rows = cur.fetchall()
 
         output = []
 
         for row in rows:
-            content = {'id_leilao': int(row[0]), 'descricao': row[1]}
+            content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'artigo_id': int(row[5]), 'creator_username': row[6], 'highestBid': getHighestBidder(row[0])[0][0][1], 'highestBidder': getHighestBidder(row[0])[1][0][0]}
             output.append(content)
 
         conn.close ()
@@ -637,6 +637,34 @@ def isAdmin(content):
         else:
             return False;
         conn.close()
+
+def getHighestBidder(id_leilao):
+    
+    conn = db_connection()
+    cur = conn.cursor()
+    # procurar a maior bid associada ao leilao em questao e o nome do user que a fez
+    statement = """SELECT utilizador_username, MAX(valor)
+    FROM licitacao 
+    WHERE licitacao.leilao_id_leilao = %s AND licitacao.cancelled = false 
+    GROUP BY utilizador_username
+    """
+    values = [id_leilao]
+    cur.execute(statement, values)
+    highest = cur.fetchall();
+    
+    # Quando nao ha bid nenhuma 
+    if highest == []:
+        return (None, None)
+    
+    # Se houver bid vai buscar a info toda do user que a fez
+    utilizador_username = highest[0][0];
+    statement = "SELECT * FROM utilizador WHERE utilizador.username = %s"
+    values = [utilizador_username]
+    cur.execute(statement, values)
+    user = cur.fetchall();
+
+    conn.close()
+    return (highest,user);
 
 ##########################################################
 ## DATABASE ACCESS

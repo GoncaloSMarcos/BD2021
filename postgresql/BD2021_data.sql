@@ -37,6 +37,7 @@ CREATE TABLE licitacao (
 	leilao_id_leilao	 INTEGER NOT NULL,
 	leilao_id_familia	 INTEGER NOT NULL,
 	utilizador_username VARCHAR(512) NOT NULL,
+	cancelled	 BOOL NOT NULL,
 	PRIMARY KEY(id)
 );
 
@@ -112,7 +113,7 @@ BEGIN
 
 	-- verificar se cumpre os requesitos de ser > preço minimo e > licitacao atual
 	IF v_preco >= v_preco_minimo AND v_preco > v_licitacao_atual THEN
-    	INSERT INTO licitacao VALUES(DEFAULT, v_preco, v_leilao_id, v_familia_id, v_username);
+    	INSERT INTO licitacao VALUES(DEFAULT, v_preco, v_leilao_id, v_familia_id, v_username, false);
 		RETURN true;
 	ELSE
    	 	RETURN false;
