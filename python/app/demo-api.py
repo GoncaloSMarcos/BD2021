@@ -81,14 +81,14 @@ def get_leilao(id_leilao):
     cur = conn.cursor()
 
     try:
-        cur.execute("""SELECT id_leilao, titulo, momento_fim, preco_minimo, descricao, cancelled, artigo_id, creator_username
+        cur.execute("""SELECT id_leilao, titulo, momento_fim, preco_minimo, descricao, artigo_id, creator_username
                     FROM leilao 
-                    WHERE leilao.id_leilao = %s""", (id_leilao,) )
+                    WHERE leilao.id_leilao = %s AND leilao.cancelled = false""", (id_leilao,) )
         
         rows = cur.fetchall()
         row = rows[0]
 
-        content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'cancelled': row[5], 'artigo_id': int(row[6]), 'creator_username': row[7]}
+        content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'artigo_id': int(row[6]), 'creator_username': row[7]}
 
         conn.close ()
         return jsonify(content)
@@ -138,7 +138,7 @@ def get_leilao_keyword(keyword):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"SELECT id_leilao, descricao FROM leilao WHERE CAST(id_leilao as VARCHAR(10)) = '{keyword}' OR descricao LIKE '%{keyword}%'")      #id_leilao*1 = id_leilao significa se e numerico
+        cur.execute(f"SELECT id_leilao, descricao FROM leilao WHERE (CAST(id_leilao as VARCHAR(10)) = '{keyword}' OR descricao LIKE '%{keyword}%') AND leilao.cancelled = false")      #id_leilao*1 = id_leilao significa se e numerico
         rows = cur.fetchall()
 
         output = []
@@ -174,7 +174,8 @@ def get_historico(id_leilao):
                         FROM leilao 
                         WHERE leilao.id_familia = (SELECT id_familia
                                                    FROM leilao
-                                                   WHERE leilao.id_leilao = {id_leilao})""") 
+                                                   WHERE leilao.id_leilao = {id_leilao})
+                        ORDER BY versao DESC""") 
         rows = cur.fetchall()
 
         output = []
@@ -215,14 +216,14 @@ def get_atividade():
             content = {'versao': int(row[0]), 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4]}
             output.append(content)
 
-        conn.close ()
+        conn.close()
         return jsonify(output)
 
     except (Exception) as error:
         logger.error(error)
         logger.error(type(error))
 
-        return jsonify('ERROR: Leilao missing from database!')
+        return jsonify('ERROR: Leilao missing from database!') # TODO meter algo de jeito aqui
 
 #EFETUAR LICITACAO
 @app.route("/dbproj/licitar/<leilaoId>/<licitacao>", methods=['GET'])
@@ -247,8 +248,82 @@ def licitar(leilaoId, licitacao):
     else:
         result = 'Erro! Verifique se está a licitar um valor superior ao atual e ao preço mínimo.'
 
-    conn.close ()
+    conn.close()
     return jsonify(result)
+
+#LISTAR CRIADORES
+@app.route("/dbproj/estatisticas/criadores", methods=['GET'])
+def get_criadores():
+
+    logger.info("###              GET /dbproj/estatisticas/criadores             ###");
+
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Please log in with an admin user before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM get_top10_criadores(%s);", (payload["authcode"],))
+    rows = cur.fetchall()
+
+    output = []
+
+    for row in rows:
+        content = {'username': row[0], 'n leiloes criados': row[1]}
+        output.append(content)
+
+    conn.close()
+    return jsonify(output)
+
+#LISTAR VENCEDORES
+@app.route("/dbproj/estatisticas/vencedores", methods=['GET'])
+def get_vencedores():
+
+    logger.info("###              GET /dbproj/estatisticas/vencedores              ###");
+
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Please log in with an admin user before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM get_top10_vencedores(%s);", (payload["authcode"],))
+    rows = cur.fetchall()
+
+    output = []
+
+    for row in rows:
+        content = {'username': row[0], 'n leiloes ganhos': row[1]}
+        output.append(content)
+
+    conn.close()
+    return jsonify(output)
+
+#LISTAR LEILOES 10 DIAS
+@app.route("/dbproj/estatisticas/total", methods=['GET'])
+def get_leiloes_10dias():
+
+    logger.info("###              GET /dbproj/estatisticas/total              ###");
+
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Please log in with an admin user before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT get_leiloes_10dias();")
+    total = cur.fetchall()
+    
+    content = {'Total de leilões nos últimos 10 dias': total[0][0]}
+    
+    conn.close()
+    return jsonify(content)
 
 
 ##########################################################
@@ -358,7 +433,7 @@ def add_artigo():
 @app.route("/dbproj/leilao/message", methods=['POST'])
 def add_message_to_leilao():
 
-    logger.info("###              GET /dbproj/leilao/message              ###");
+    logger.info("###              POST /dbproj/leilao/message              ###");
     payload = request.get_json()
 
     if not isLoggedIn(payload):
@@ -461,14 +536,13 @@ def cancel_leilao(id_leilao):
     # parameterized queries, good for security and performance
     statement ="""
                 UPDATE leilao 
-                  SET cancelled = %s
+                SET cancelled = %s
                 WHERE id_leilao = %s"""
-
 
     values = (True, id_leilao)
     
     try:
-        res = cur.execute(statement, values)
+        cur.execute(statement, values)
         result = f'Updated: {cur.rowcount}'
         cur.execute("commit")
     except (Exception, psycopg2.DatabaseError) as error:
@@ -480,7 +554,41 @@ def cancel_leilao(id_leilao):
     
     return jsonify(result)
 
+#TERMINAR LEILOES
+@app.route("/dbproj/leiloes/end", methods=['PUT'])
+def terminar_leiloes(id_leilao):
+    logger.info("###              PUT /dbproj/leiloes/end              ###")
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Admin permissions needed"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.info("---- terminar leiloes  ----")
+
+    # parameterized queries, good for security and performance
+    statement ="""
+                UPDATE leilao 
+                SET terminado = %s
+                WHERE leilao.momento_fim >= CURRENT_TIMESTAMP()"""
+
+    values = (True,)
     
+    try:
+        cur.execute(statement, values)
+        result = f'Updated: {cur.rowcount}' # TODO N sei se isto funciona, gonçalo, test it
+        cur.execute("commit")
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        result = 'Failed!' # TODO Mudar isto para outputs adequados
+    finally:
+        if conn is not None:
+            conn.close()
+    
+    return jsonify(result)
+
 ##########################################################
 ## AUXILIARY FUNCTIONS
 ##########################################################
@@ -496,7 +604,7 @@ def isLoggedIn(content):
     logger.info("----  AUX: isLoggedIn  ----")
     logger.info(f'content: {content}')
 
-    statement = "SELECT count(*) FROM utilizador WHERE utilizador.authcode = %s"
+    statement = "SELECT count(*) FROM utilizador WHERE utilizador.authcode = %s and utilizador.banned = false"
     values = [content["authcode"]]
 
     cur.execute(statement, values)

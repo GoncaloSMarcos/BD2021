@@ -256,6 +256,105 @@
 			"response": []
 		},
 		{
+			"name": "Listar Criadores",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/estatisticas/criadores",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"estatisticas",
+						"criadores"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Vencedores",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/estatisticas/vencedores",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"estatisticas",
+						"vencedores"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Total Leilões Recentes",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/estatisticas/total",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"estatisticas",
+						"total"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Adicionar Utilizador",
 			"request": {
 				"method": "POST",
@@ -322,7 +421,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"artigo_id\": \"1\", \n    \"preco_minimo\": \"22\", \n    \"titulo\": \"Leilao1\",\n    \"descricao\":\"este e o primeiro leilao\",\n    \"momento_fim\":\"2021-05-27\",\n    \"authcode\": \"1\"\n}",
+					"raw": "{\n    \"artigo_id\": \"1\", \n    \"preco_minimo\": \"22\", \n    \"titulo\": \"Leilao1\",\n    \"descricao\":\"este e o primeiro leilao\",\n    \"momento_fim\":\"2021-05-27 17:30\",\n    \"authcode\": \"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
