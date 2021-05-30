@@ -12,9 +12,10 @@ CREATE TABLE leilao (
 	preco_minimo DOUBLE PRECISION NOT NULL,
 	descricao	 VARCHAR(1024) NOT NULL,
 	versao	 INTEGER NOT NULL,
-	id_familia	 INTEGER NOT NULL,
+	id_familia	 SERIAL NOT NULL,
 	cancelled	 BOOL NOT NULL,
 	artigo_id	 INTEGER NOT NULL,
+	creator_username	VARCHAR(512) NOT NULL,
 	PRIMARY KEY(id_leilao)
 );
 
@@ -32,6 +33,7 @@ CREATE TABLE licitacao (
 	id			 SERIAL,
 	valor		 DOUBLE PRECISION NOT NULL,
 	leilao_id_leilao	 INTEGER NOT NULL,
+	leilao_id_familia	 INTEGER NOT NULL,
 	utilizador_username VARCHAR(512) NOT NULL,
 	PRIMARY KEY(id)
 );
@@ -59,6 +61,7 @@ CREATE TABLE utilizador_leilao (
 );
 
 ALTER TABLE leilao ADD CONSTRAINT leilao_fk1 FOREIGN KEY (artigo_id) REFERENCES artigo(id);
+ALTER TABLE leilao ADD CONSTRAINT leilao_fk2 FOREIGN KEY (creator_username) REFERENCES utilizador(username);
 ALTER TABLE licitacao ADD CONSTRAINT licitacao_fk1 FOREIGN KEY (leilao_id_leilao) REFERENCES leilao(id_leilao);
 ALTER TABLE licitacao ADD CONSTRAINT licitacao_fk2 FOREIGN KEY (utilizador_username) REFERENCES utilizador(username);
 ALTER TABLE mensagem ADD CONSTRAINT mensagem_fk1 FOREIGN KEY (utilizador_username) REFERENCES utilizador(username);
@@ -96,12 +99,12 @@ BEGIN
 	-- get licitacao atual
 	SELECT coalesce(MAX(licitacao.valor), 0)
    	INTO v_licitacao_atual
-   	FROM licitacao, leilao
-   	WHERE licitacao.leilao_id_leilao = leilao.id_leilao AND leilao.id_familia = v_familia_id;
+   	FROM licitacao
+   	WHERE licitacao.leilao_id_familia = v_familia_id;
 
 	-- verificar se cumpre os requesitos de ser > preço minimo e > licitacao atual
 	IF v_preco >= v_preco_minimo AND v_preco > v_licitacao_atual THEN
-    	INSERT INTO licitacao VALUES(DEFAULT, v_preco, v_leilao_id,v_username);
+    	INSERT INTO licitacao VALUES(DEFAULT, v_preco, v_leilao_id, v_familia_id, v_username);
 		RETURN true;
 	ELSE
    	 	RETURN false;
@@ -109,13 +112,48 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION edit_leilao(v_titulo VARCHAR, v_momento_fim TIMESTAMP, v_preco_minimo INTEGER, v_descricao VARCHAR, v_id_leilao INTEGER, v_artigo_id INTEGER)
+CREATE OR REPLACE FUNCTION add_leilao(v_titulo VARCHAR, v_momento_fim TIMESTAMP, v_preco_minimo INTEGER, v_descricao VARCHAR, v_artigo_id INTEGER, v_authcode INTEGER)
+RETURNS INTEGER
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+	v_username VARCHAR;
+	v_id INTEGER;
+	v_inLeilao INTEGER;
+BEGIN
+	-- get username from authcode
+	SELECT username
+   	INTO v_username
+   	FROM utilizador
+   	WHERE utilizador.authcode = v_authcode;
+
+	-- check if artigo is in a leilao
+	SELECT count(*)
+	INTO v_inLeilao
+	FROM leilao 
+	WHERE leilao.artigo_id = v_artigo_id;
+	
+	IF v_inLeilao = 0 THEN
+		INSERT INTO leilao (id_leilao, titulo, momento_fim, preco_minimo, descricao, versao, id_familia, cancelled, artigo_id, creator_username)
+    	VALUES (DEFAULT, v_titulo, v_momento_fim, v_preco_minimo, v_descricao, 1, DEFAULT, false, v_artigo_id, v_username)
+		RETURNING id_leilao INTO v_id;
+
+		RETURN v_id;
+	ELSE
+		RETURN 0;
+	END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION edit_leilao(v_titulo VARCHAR, v_momento_fim TIMESTAMP, v_preco_minimo INTEGER, v_descricao VARCHAR, v_id_leilao INTEGER, v_artigo_id INTEGER, v_authcode INTEGER)
 RETURNS BOOL
 LANGUAGE plpgsql
 AS
 $$
 DECLARE
 	v_versao INTEGER;
+	v_username VARCHAR;
 BEGIN
 	-- get versao do leilao
 	SELECT versao
@@ -126,12 +164,17 @@ BEGIN
 	-- atualizar versao
 	v_versao := v_versao + 1;
 
-	INSERT INTO leilao (id_leilao, titulo, momento_fim, preco_minimo, descricao, versao, id_familia, cancelled, artigo_id)
-	VALUES (DEFAULT, v_titulo, v_momento_fim, v_preco_minimo, v_descricao, v_versao, v_id_leilao, false, v_artigo_id);
+	-- get username from authcode
+	SELECT username
+   	INTO v_username
+   	FROM utilizador
+   	WHERE utilizador.authcode = v_authcode;
+
+	INSERT INTO leilao (id_leilao, titulo, momento_fim, preco_minimo, descricao, versao, id_familia, cancelled, artigo_id, creator_username)
+	VALUES (DEFAULT, v_titulo, v_momento_fim, v_preco_minimo, v_descricao, v_versao, v_id_leilao, false, v_artigo_id, v_username);
 	RETURN true;
 END;
 $$;
-
 
 CREATE OR REPLACE FUNCTION add_message(v_id_leilao INTEGER, v_conteudo VARCHAR, v_authcode INTEGER)
 RETURNS BOOL
@@ -149,5 +192,32 @@ BEGIN
 	-- inserir mensagem no mural do leilao
 	INSERT into mensagem VALUES(DEFAULT, v_conteudo, v_username, v_id_leilao);
 	RETURN true;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION get_atividade(v_authcode INTEGER)
+RETURNS TABLE (
+		v_versao INTEGER,
+		v_titulo VARCHAR,
+		v_descricao VARCHAR,
+		v_preco_minimo DOUBLE PRECISION,
+		v_momento_fim TIMESTAMP
+		) 
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+	v_username VARCHAR;
+BEGIN
+  -- obter username atraves de authCode
+	SELECT username
+	INTO v_username
+	FROM utilizador
+	WHERE utilizador.authcode = v_authcode;
+
+	-- get leiloes criados ou leiloes nos quais o user participou DOES NOT WORK
+	RETURN QUERY SELECT versao, titulo, descricao, preco_minimo, momento_fim
+				 FROM leilao, licitacao
+				 WHERE (leilao.creator_username = v_username OR licitacao.utilizador_username = v_username) AND licitacao.leilao_id_leilao = leilao.id_leilao;
 END;
 $$;

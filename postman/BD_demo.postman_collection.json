@@ -27,9 +27,21 @@
 		},
 		{
 			"name": "Listar Artigos",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
 				"method": "GET",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
 					"raw": "http://localhost:8080/dbproj/artigo/",
 					"protocol": "http",
@@ -179,13 +191,78 @@
 			"response": []
 		},
 		{
+			"name": "Histórico de um Leilão",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/historico/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"historico",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Atividade",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/atividade",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"atividade"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Adicionar Utilizador",
 			"request": {
 				"method": "POST",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"username\": \"UserTesteAA\", \n    \"email\": \"Email@teste.com\", \n    \"password\": \"PasswordTeste\",\n    \"admin\": true\n}",
+					"raw": "{\n    \"username\": \"UserTeste\", \n    \"email\": \"Email@teste.com\", \n    \"password\": \"PasswordTeste\",\n    \"admin\": true\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -245,7 +322,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"artigo_id\": \"1\", \n    \"preco_minimo\": \"22\", \n    \"titulo\": \"Leilao1\",\n    \"descricao\":\"este e o primeiro leilao\",\n    \"momento_fim\":\"2021-05-27\",\n    \"id_leilao\":\"1\",\n    \"id_familia\":\"1\",\n    \"authcode\": \"1\"\n}",
+					"raw": "{\n    \"artigo_id\": \"1\", \n    \"preco_minimo\": \"22\", \n    \"titulo\": \"Leilao1\",\n    \"descricao\":\"este e o primeiro leilao\",\n    \"momento_fim\":\"2021-05-27\",\n    \"authcode\": \"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -305,7 +382,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"username\": \"UserTesteAA\",\n    \"password\": \"PasswordTeste\"\n}",
+					"raw": "{\n    \"username\": \"UserTeste\",\n    \"password\": \"PasswordTeste\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -335,7 +412,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"titulo\": \"Leilao1 editado\",\n    \"momento_fim\":\"2021-05-27\",\n    \"preco_minimo\": 22,\n    \"descricao\":\"este e o primeiro leilao editado\",\n    \"id_leilao\":\"1\",\n    \"artigo_id\": \"1\"\n}",
+					"raw": "{\n    \"titulo\": \"Leilao1 editado\",\n    \"momento_fim\":\"2021-05-27\",\n    \"preco_minimo\": 22,\n    \"descricao\":\"este e o primeiro leilao editado\",\n    \"id_leilao\":\"1\",\n    \"artigo_id\": \"1\",\n    \"authcode\":\"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
