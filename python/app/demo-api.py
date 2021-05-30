@@ -42,6 +42,43 @@ def get_all_users():
     conn.close()
     return jsonify(payload)
 
+#GET USER BY USERNAME
+@app.route("/dbproj/user/<username>", methods=['GET'])
+def get_user(username):
+
+    logger.info("###              GET /user/<username>              ###");
+    payload = request.get_json()
+    
+    if not isLoggedIn(payload):
+        return jsonify({"authError": "Please log in before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    try:
+        statement = "SELECT * FROM utilizador WHERE utilizador.username = %s"
+        values = [username]
+        cur.execute(statement, values)
+        rows = cur.fetchall()
+        logger.info(rows);
+
+        output = []
+        for row in rows:
+            content = {'username': row[0], 'email': row[1], 'password': row[2], 'banned': row[3], 'admin': row[4], 'authcode': row[5]}
+            output.append(content)
+
+        conn.close ()
+        if output == []:
+            return jsonify('ERROR: User missing from database!')
+        else:
+            return jsonify(output)
+
+    except (Exception) as error:
+        logger.error(error)
+        logger.error(type(error))
+
+        return jsonify('ERROR: User missing from database!')
+
 #GET ALL LEILOES
 @app.route("/dbproj/leiloes/", methods=['GET'])
 def get_all_leiloes():
