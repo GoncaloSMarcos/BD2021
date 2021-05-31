@@ -161,18 +161,31 @@ AS
 $$
 DECLARE
 	v_versao INTEGER;
+	v_id_leilao_geral INTEGER;
 	v_username VARCHAR;
+	v_creator_username VARCHAR;
 	v_terminado BOOL;
 	v_cancelled BOOL;
+	v_admin BOOL;
 BEGIN
 	-- get versao do leilao
-	SELECT versao, terminado, cancelled
-   	INTO v_versao, v_terminado, v_cancelled
+	SELECT id_leilao, versao, terminado, cancelled, creator_username
+   	INTO v_id_leilao_geral, v_versao, v_terminado, v_cancelled, v_creator_username
    	FROM leilao
-   	WHERE leilao.id_leilao = v_id_leilao;
+   	WHERE leilao.id_familia = v_id_leilao AND leilao.cancelled = false;
 
 	IF v_terminado = true OR v_cancelled = true THEN
 		RETURN false;
+	END IF;
+
+	-- get username from authcode
+	SELECT username, admin
+   	INTO v_username, v_admin
+   	FROM utilizador
+   	WHERE utilizador.authcode = v_authcode;
+
+	IF v_username != v_creator_username AND v_admin != true THEN
+		return false;
 	END IF;
 
 	-- atualizar versao
@@ -181,13 +194,8 @@ BEGIN
 	-- cancelar leilao anterior
 	UPDATE leilao
 	SET cancelled = true
-	WHERE leilao.id_leilao = v_id_leilao;
+	WHERE leilao.id_leilao = v_id_leilao_geral;
 
-	-- get username from authcode
-	SELECT username
-   	INTO v_username
-   	FROM utilizador
-   	WHERE utilizador.authcode = v_authcode;
 
 	INSERT INTO leilao (id_leilao, titulo, momento_fim, preco_minimo, descricao, versao, id_familia, cancelled, artigo_id, creator_username, terminado)
 	VALUES (DEFAULT, v_titulo, v_momento_fim, v_preco_minimo, v_descricao, v_versao, v_id_leilao, false, v_artigo_id, v_username, false);
@@ -259,8 +267,6 @@ BEGIN
 END;
 $$;
 
-
-
 CREATE OR REPLACE FUNCTION mural(v_id_leilao INTEGER, v_authcode INTEGER)
 RETURNS TABLE (
 		v_username VARCHAR,
@@ -285,8 +291,6 @@ BEGIN
 END;
 $$;
 
-
-
 CREATE OR REPLACE FUNCTION notify_users_of_messages()
 	RETURNS TRIGGER
 	LANGUAGE plpgsql
@@ -309,53 +313,39 @@ $$
 	END;
 $$;
 
-
-
-
 CREATE TRIGGER notify_users_of_messages_trigger
   AFTER INSERT
   ON mensagem
   FOR EACH STATEMENT
 	EXECUTE PROCEDURE notify_users_of_messages();
 
+CREATE OR REPLACE FUNCTION notify_users_of_bid()
+	RETURNS TRIGGER
+	LANGUAGE plpgsql
+	AS
+$$
+	DECLARE
+		c1 cursor for SELECT DISTINCT utilizador_username from licitacao where leilao_id_leilao = (SELECT licitacao.leilao_id_leilao from licitacao where licitacao.id = (SELECT MAX(id) FROM licitacao));
+		v_id_leilao INTEGER;
+		v_last_bidder VARCHAR;
+	BEGIN
+	SELECT licitacao.leilao_id_leilao INTO v_id_leilao FROM licitacao where licitacao.id = (SELECT MAX(id) FROM licitacao);
+	SELECT licitacao.utilizador_username INTO v_last_bidder  FROM licitacao WHERE licitacao.id = (SELECT MAX(id) FROM licitacao);
+		for r in c1
+		loop
+			if (r.utilizador_username is distinct from v_last_bidder) then
+				INSERT INTO notificacao VALUES(DEFAULT, CONCAT('Licitacao ultrapassada no leilao de id: ', CAST(v_id_leilao as VARCHAR(10))), r.utilizador_username, v_id_leilao);
+			end if;
+		end loop;
+		RETURN NEW;
+	END;
+$$;
 
-
-
-
-
-	CREATE OR REPLACE FUNCTION notify_users_of_bid()
-		RETURNS TRIGGER
-		LANGUAGE plpgsql
-		AS
-	$$
-		DECLARE
-			c1 cursor for SELECT DISTINCT utilizador_username from licitacao where leilao_id_leilao = (SELECT licitacao.leilao_id_leilao from licitacao where licitacao.id = (SELECT MAX(id) FROM licitacao));
-			v_id_leilao INTEGER;
-			v_last_bidder VARCHAR;
-		BEGIN
-		SELECT licitacao.leilao_id_leilao INTO v_id_leilao FROM licitacao where licitacao.id = (SELECT MAX(id) FROM licitacao);
-		SELECT licitacao.utilizador_username INTO v_last_bidder  FROM licitacao WHERE licitacao.id = (SELECT MAX(id) FROM licitacao);
-			for r in c1
-			loop
-				if (r.utilizador_username is distinct from v_last_bidder) then
-					INSERT INTO notificacao VALUES(DEFAULT, CONCAT('Licitacao ultrapassada no leilao de id: ', CAST(v_id_leilao as VARCHAR(10))), r.utilizador_username, v_id_leilao);
-				end if;
-			end loop;
-			RETURN NEW;
-		END;
-	$$;
-
-
-
-
-	CREATE TRIGGER notify_users_of_bid_trigger
-	  AFTER INSERT
-	  ON licitacao
-	  FOR EACH STATEMENT
-		EXECUTE PROCEDURE notify_users_of_bid();
-
-
-
+CREATE TRIGGER notify_users_of_bid_trigger
+	AFTER INSERT
+	ON licitacao
+	FOR EACH STATEMENT
+	EXECUTE PROCEDURE notify_users_of_bid();
 
 	CREATE OR REPLACE FUNCTION random_portal_name()
 	RETURNS varchar as $$
@@ -456,8 +446,6 @@ CREATE OR REPLACE FUNCTION get_top10_vencedores(v_authcode INTEGER)
 	END;
 $$;
 
-
-
 CREATE OR REPLACE FUNCTION get_leiloes_10dias()
 	RETURNS BIGINT
 	LANGUAGE plpgsql
@@ -474,8 +462,6 @@ CREATE OR REPLACE FUNCTION get_leiloes_10dias()
 		RETURN total;
 	END;
 $$;
-
-
 
 CREATE OR REPLACE FUNCTION get_notificacoes(v_authcode INTEGER)
 RETURNS TABLE (

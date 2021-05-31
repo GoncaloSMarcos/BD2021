@@ -26,6 +26,10 @@ def hello():
 def get_all_users():
 
     logger.info("###              GET /dbproj/user/              ###")
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Please log in with an admin user before executing this"})
 
     conn = db_connection()
     cur = conn.cursor()
@@ -36,7 +40,7 @@ def get_all_users():
     payload = []
 
     for row in rows:
-        content = {'username': row[0], 'email': row[1], 'password': row[2], 'banned': row[3], 'admin': row[4], 'authcode': row[5]}
+        content = {'username': row[0], 'email': row[1], 'banned': row[3], 'admin': row[4], 'authcode': row[5]}
         payload.append(content) # appending to the payload to be returned
 
     conn.close()
@@ -56,7 +60,7 @@ def get_user(username):
     cur = conn.cursor()
 
     try:
-        statement = "SELECT * FROM utilizador WHERE utilizador.username = %s"
+        statement = "SELECT username, email FROM utilizador WHERE utilizador.username = %s"
         values = [username]
         cur.execute(statement, values)
         rows = cur.fetchall()
@@ -64,7 +68,7 @@ def get_user(username):
 
         output = []
         for row in rows:
-            content = {'username': row[0], 'email': row[1], 'password': row[2], 'banned': row[3], 'admin': row[4], 'authcode': row[5]}
+            content = {'username': row[0], 'email': row[1]}
             output.append(content)
 
         conn.close ()
@@ -121,28 +125,42 @@ def get_leilao(id_leilao):
     conn = db_connection()
     cur = conn.cursor()
 
-    #try:
-    cur.execute("""SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id, cancelled
-                FROM leilao
-                WHERE leilao.id_leilao = %s""", (id_leilao,) )
-    rows = cur.fetchall()
-    row = rows[0]
-    logger.info(rows)
+    try:
+        cur.execute("""SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id, cancelled
+                    FROM leilao
+                    WHERE leilao.id_leilao = %s""", (id_leilao,) )
+        rows = cur.fetchall()
+        row = rows[0]
 
-    aux = getHighestBidder(row[0])
-    if aux[0] != None:
-        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
-    else:
-        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': None, 'highestBidder': None}
+        aux = getHighestBidder(row[0])
+        if aux[0] != None:
+            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
+        else:
+            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': None, 'highestBidder': None}
 
-    conn.close ()
-    return jsonify(content)
+        cur.execute("""SELECT utilizador_username, valor
+                    FROM licitacao
+                    WHERE licitacao.leilao_id_leilao = %s""", (id_leilao,) )
+        rows = cur.fetchall()
+        logger.info(rows)
+        content['licitacoes'] = rows
 
-    # except (Exception) as error:
-    #     logger.error(error)
-    #     logger.error(type(error))
-    #
-    #     return jsonify('ERROR: Leilao missing from database!')
+        cur.execute("""SELECT utilizador_username, conteudo
+                    FROM mensagem
+                    WHERE mensagem.leilao_id_leilao = %s""", (id_leilao,) )
+        rows = cur.fetchall()
+        logger.info(rows)
+        content['mensagens'] = rows
+
+
+        conn.close ()
+        return jsonify(content)
+
+    except (Exception) as error:
+        logger.error(error)
+        logger.error(type(error))
+
+        return jsonify('ERROR: Leilao missing from database!')
 
 #GET ALL ARTIGOS
 @app.route("/dbproj/artigo/", methods=['GET'])
@@ -219,7 +237,7 @@ def get_historico(id_leilao):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"""SELECT id_leilao, descricao
+        cur.execute(f"""SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, artigo_id
                         FROM leilao
                         WHERE leilao.id_familia = (SELECT id_familia
                                                    FROM leilao
@@ -230,7 +248,7 @@ def get_historico(id_leilao):
         output = []
 
         for row in rows:
-            content = {'id_leilao': int(row[0]), 'descricao': row[1]}
+            content = {'id_leilao': int(row[0]), 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'artigo_id': row[7]}
             output.append(content)
 
         conn.close ()
@@ -288,6 +306,9 @@ def licitar(leilaoId, licitacao):
     conn = db_connection()
     cur = conn.cursor()
 
+    cur.execute("BEGIN TRANSACTION")
+    cur.execute("LOCK TABLE licitacao")
+
     cur.execute("SELECT licitar(%s, %s, %s);", (licitacao, payload["authcode"], leilaoId))
     sucessful = cur.fetchall()
 
@@ -295,6 +316,7 @@ def licitar(leilaoId, licitacao):
         cur.execute("commit")
         result = 'Licitação realizada com sucesso!'
     else:
+        cur.execute("rollback")
         result = 'Erro! Verifique se está a licitar um valor superior ao atual e ao preço mínimo.'
 
     conn.close()
@@ -470,6 +492,8 @@ def add_utilizador():
 
     logger.info("---- novo utilizador  ----")
 
+    cur.execute("BEGIN TRANSACTION")
+    cur.execute("LOCK TABLE utilizador")
     # parameterized queries, good for security and performance
     statement = """
                   INSERT INTO utilizador (username, email, password, banned, admin, authcode)
@@ -484,6 +508,7 @@ def add_utilizador():
 
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
+        cur.execute("ROLLBACK")
         result = {'erro': str(type(error))}
 
     finally:
@@ -507,6 +532,9 @@ def add_leilao():
 
     logger.info("---- novo leilao  ----")
 
+    cur.execute("BEGIN TRANSACTION")
+    cur.execute("LOCK TABLE leilao")
+
     cur.execute("SELECT add_leilao(%s, %s, %s, %s, %s, %s);", (payload["titulo"], payload["momento_fim"], payload["preco_minimo"], payload["descricao"], payload["artigo_id"], payload["authcode"]))
     result = cur.fetchall()
 
@@ -515,7 +543,7 @@ def add_leilao():
         result = {'id_leilao': result[0][0]}
 
     else:
-
+        cur.execute("ROLLBACK")
         result = {'Erro': 'Artigo já em venda, por favor escolha outro artigo'}
 
     conn.close()
@@ -536,6 +564,8 @@ def add_artigo():
 
     logger.info("---- novo artigo  ----")
 
+    cur.execute("BEGIN TRANSACTION")
+    cur.execute("LOCK TABLE artigo")
     # parameterized queries, good for security and performance
     statement = """
                   INSERT INTO artigo (id, nome, descricao)
@@ -550,6 +580,7 @@ def add_artigo():
 
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
+        cur.execute("ROLLBACK")
         result = {'erro': str(type(error))}
 
     finally:
@@ -570,24 +601,17 @@ def add_message_to_leilao():
     conn = db_connection()
     cur = conn.cursor()
 
-    try:
-        cur.execute("SELECT add_message(%s, %s, %s);", (payload["id_leilao"], payload["conteudo"],payload["authcode"]))
-        sucessful = cur.fetchall()
+    cur.execute("BEGIN TRANSACTION")
+    cur.execute("LOCK TABLE mensagem")
+    cur.execute("SELECT add_message(%s, %s, %s);", (payload["id_leilao"], payload["conteudo"],payload["authcode"]))
+    sucessful = cur.fetchall()
 
-        if sucessful[0][0]:
-            cur.execute("commit")
-            result = 'Teste: Sucedido!' # TODO Mudar isto para outputs adequados
-        else:
-            result = 'Teste: Failed!' # TODO Mudar isto para outputs adequados
-
-        conn.close ()
-        return jsonify(result)
-    except (Exception, psycopg2.DatabaseError) as error:
-        logger.error(error)
-        result = {'erro': str(type(error))}
-    finally:
-        if conn is not None:
-            conn.close()
+    if sucessful[0][0]:
+        cur.execute("commit")
+        result = 'Teste: Sucedido!' # TODO Mudar isto para outputs adequados
+    else:
+        cur.execute("ROLLBACK")
+        result = 'Teste: Failed!' # TODO Mudar isto para outputs adequados
 
     return jsonify(result)
 
@@ -644,63 +668,67 @@ def ban_user(username):
 
     logger.info("---- ban user  ----")
 
-    #try:
-        # Colocar o atribudo "banned" a True
-    statement ="""
-                UPDATE utilizador
-                SET banned = %s
-                WHERE username = %s"""
+    cur.execute("BEGIN TRANSACTION")
+    cur.execute("LOCK TABLE utilizador")
+    cur.execute("LOCK TABLE leilao")
+    cur.execute("LOCK TABLE licitacao")
 
-    values = (True, username)
+    try:
+            # Colocar o atribudo "banned" a True
+        statement ="""
+                    UPDATE utilizador
+                    SET banned = %s
+                    WHERE username = %s"""
 
-    cur.execute(statement, values)
+        values = (True, username)
 
-    # Cancelar todos os leiloes desse utilizador
-    statement ="""
-                UPDATE leilao
-                SET cancelled = %s
-                WHERE creator_username = %s"""
+        cur.execute(statement, values)
 
-    values = (True, username)
+        # Cancelar todos os leiloes desse utilizador
+        statement ="""
+                    UPDATE leilao
+                    SET cancelled = %s
+                    WHERE creator_username = %s"""
 
-    cur.execute(statement, values)
+        values = (True, username)
 
-    # Invalidar todas as licitacoes desse utilizador
-    statement ="""
-                UPDATE licitacao
-                SET cancelled = %s
-                WHERE utilizador_username = %s"""
+        cur.execute(statement, values)
 
-    values = (True, username)
+        # Invalidar todas as licitacoes desse utilizador
+        statement ="""
+                    UPDATE licitacao
+                    SET cancelled = %s
+                    WHERE utilizador_username = %s"""
 
-    cur.execute(statement, values)
+        values = (True, username)
 
-    # # Invalidar todas as licitacoes superiores
-    # statement ="""
-    #             HELP
-    #             """
-    #
-    # values = (True, username)
-    #
-    # cur.execute(statement, values)
+        cur.execute(statement, values)
 
+        # # Invalidar todas as licitacoes superiores
+        # statement ="""
+        #             HELP
+        #             """
+        #
+        # values = (True, username)
+        #
+        # cur.execute(statement, values)
 
+            # Criar mensagem no moral
+            """
+            Automaticamente é criada uma mensagem no mural dos leilões afetados lamentando o
+            incómodo e todos os utilizadores envolvidos devem receber uma notificação.
+            """
 
-    # Criar mensagem no moral
-    """
-Automaticamente é criada uma mensagem no mural dos leilões afetados lamentando o
-incómodo e todos os utilizadores envolvidos devem receber uma notificação.
-    """
+        result = f'Updated: {cur.rowcount}'
+        cur.execute("commit")
 
-    result = f'Updated: {cur.rowcount}'
-    cur.execute("commit")
-
-    # except (Exception, psycopg2.DatabaseError) as error:
-    #     logger.error(error)
-    #     result = 'Failed!' # TODO Mudar isto para outputs adequados
-    # finally:
-    #     if conn is not None:
-    #         conn.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        cur.execute("ROLLBACK")
+        result = 'Failed!' # TODO Mudar isto para outputs adequados
+    finally:
+        if conn is not None:
+            conn.close()
 
     return jsonify(result)
 
@@ -719,6 +747,8 @@ def edit_leilao(id_leilao):
 
     logger.info("---- editar leilao  ----")
 
+    cur.execute("BEGIN TRANSACTION")
+    cur.execute("LOCK TABLE leilao")
     cur.execute("SELECT edit_leilao(%s, %s, %s, %s, %s, %s, %s);", (payload["titulo"], payload["momento_fim"], payload["preco_minimo"], payload["descricao"], id_leilao, payload["artigo_id"], payload["authcode"]))
     sucessful = cur.fetchall()
 
@@ -726,6 +756,7 @@ def edit_leilao(id_leilao):
         cur.execute("commit")
         result = 'Teste: Sucedido!' # TODO Mudar isto para outputs adequados
     else:
+        cur.execute("ROLLBACK")
         result = 'Teste: Failed!' # TODO Mudar isto para outputs adequados
 
     conn.close ()
@@ -745,6 +776,9 @@ def cancel_leilao(id_leilao):
 
     logger.info("---- editar leilao  ----")
 
+    cur.execute("BEGIN TRANSACTION")
+    cur.execute("LOCK TABLE leilao")
+
     # parameterized queries, good for security and performance
     statement ="""
                 UPDATE leilao
@@ -759,6 +793,7 @@ def cancel_leilao(id_leilao):
         cur.execute("commit")
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
+        cur.execute("ROLLBACK")
         result = 'Failed!' # TODO Mudar isto para outputs adequados
     finally:
         if conn is not None:
@@ -780,6 +815,9 @@ def terminar_leiloes(id_leilao):
 
     logger.info("---- terminar leiloes  ----")
 
+    cur.execute("BEGIN TRANSACTION")
+    cur.execute("LOCK TABLE leilao")
+
     # parameterized queries, good for security and performance
     statement ="""
                 UPDATE leilao
@@ -794,6 +832,7 @@ def terminar_leiloes(id_leilao):
         cur.execute("commit")
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
+        cur.execute("ROLLBACK")
         result = 'Failed!' # TODO Mudar isto para outputs adequados
     finally:
         if conn is not None:
@@ -859,6 +898,7 @@ def getHighestBidder(id_leilao):
     FROM licitacao
     WHERE licitacao.leilao_id_leilao = %s AND licitacao.cancelled = false
     GROUP BY utilizador_username
+    ORDER BY 2 DESC
     """
     values = [id_leilao]
     cur.execute(statement, values)
