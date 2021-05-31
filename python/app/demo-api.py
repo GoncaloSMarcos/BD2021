@@ -70,7 +70,7 @@ def get_all_leiloes():
 #GET LEILAO BY ID
 @app.route("/dbproj/leilao/<id_leilao>", methods=['GET'])
 def get_leilao(id_leilao):
-    
+
     logger.info("###              GET /leilao/<id_leilao>              ###");
     payload = request.get_json()
 
@@ -82,9 +82,9 @@ def get_leilao(id_leilao):
 
     try:
         cur.execute("""SELECT id_leilao, titulo, momento_fim, preco_minimo, descricao, cancelled, artigo_id, creator_username
-                    FROM leilao 
+                    FROM leilao
                     WHERE leilao.id_leilao = %s""", (id_leilao,) )
-        
+
         rows = cur.fetchall()
         row = rows[0]
 
@@ -105,7 +105,7 @@ def get_all_artigos():
 
     logger.info("###              GET /dbproj/artigo/              ###")
     payload = request.get_json()
-    
+
     if not isLoggedIn(payload):
         return jsonify({"authError": "Please log in before executing this"})
 
@@ -130,7 +130,7 @@ def get_leilao_keyword(keyword):
 
     logger.info("###              GET /leiloes/<keyword>              ###");
     payload = request.get_json()
-    
+
     if not isLoggedIn(payload):
         return jsonify({"authError": "Please log in before executing this"})
 
@@ -162,7 +162,7 @@ def get_historico(id_leilao):
 
     logger.info("###              GET /historico/<id_leilao>             ###");
     payload = request.get_json()
-    
+
     if not isLoggedIn(payload):
         return jsonify({"authError": "Please log in before executing this"})
 
@@ -170,11 +170,11 @@ def get_historico(id_leilao):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"""SELECT id_leilao, descricao 
-                        FROM leilao 
+        cur.execute(f"""SELECT id_leilao, descricao
+                        FROM leilao
                         WHERE leilao.id_familia = (SELECT id_familia
                                                    FROM leilao
-                                                   WHERE leilao.id_leilao = {id_leilao})""") 
+                                                   WHERE leilao.id_leilao = {id_leilao})""")
         rows = cur.fetchall()
 
         output = []
@@ -198,7 +198,7 @@ def get_atividade():
 
     logger.info("###              GET /atividade             ###");
     payload = request.get_json()
-    
+
     if not isLoggedIn(payload):
         return jsonify({"authError": "Please log in before executing this"})
 
@@ -206,7 +206,7 @@ def get_atividade():
     cur = conn.cursor()
 
     try:
-        cur.execute("SELECT get_atividade(%s);", (payload["authcode"],)) 
+        cur.execute("SELECT get_atividade(%s);", (payload["authcode"],))
         rows = cur.fetchall()
 
         logger.debug(rows)
@@ -251,6 +251,45 @@ def licitar(leilaoId, licitacao):
 
     conn.close ()
     return jsonify(result)
+
+
+#ENDPOINT PARA MENSAGENS (RECEBE ID DO LEILAO)
+@app.route("/dbproj/leilao/mural/<leilaoId>", methods=['GET'])
+def get_mural_leilao(leilaoId):
+
+    logger.info("###              GET /dbproj/leilao/mural/<leilaoId>              ###");
+
+    payload = request.get_json()
+
+    if not isLoggedIn(payload):
+        return jsonify({"authError": "Please log in before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("SELECT * from mural(%s, %s);", (leilaoId, payload["authcode"]))
+        logger.info("###        Executed Mural         ###");
+        rows = cur.fetchall()
+        logger.debug(rows)
+
+        output = []
+
+        for row in rows:
+            content = {'conteudo':row[1],'utilizador':row[0]}
+            #content = {'utilizador':row["v_username"]}
+
+            output.append(content)
+
+        conn.close ()
+        return jsonify(output)
+
+
+    except (Exception) as error:
+        logger.error(error)
+        logger.error(type(error))
+
+        return jsonify('ERROR: Erro a obter mural do leilao!')
 
 
 ##########################################################
@@ -308,7 +347,7 @@ def add_leilao():
 
     cur.execute("SELECT add_leilao(%s, %s, %s, %s, %s, %s);", (payload["titulo"], payload["momento_fim"], payload["preco_minimo"], payload["descricao"], payload["artigo_id"], payload["authcode"]))
     result = cur.fetchall()
-    
+
     if result[0][0] != 0:
         cur.execute("commit")
         result = {'id_leilao': result[0][0]}
@@ -462,13 +501,13 @@ def cancel_leilao(id_leilao):
 
     # parameterized queries, good for security and performance
     statement ="""
-                UPDATE leilao 
+                UPDATE leilao
                   SET cancelled = %s
                 WHERE id_leilao = %s"""
 
 
     values = (True, id_leilao)
-    
+
     try:
         res = cur.execute(statement, values)
         result = f'Updated: {cur.rowcount}'
@@ -479,16 +518,16 @@ def cancel_leilao(id_leilao):
     finally:
         if conn is not None:
             conn.close()
-    
+
     return jsonify(result)
 
-    
+
 ##########################################################
 ## AUXILIARY FUNCTIONS
 ##########################################################
 
 def isLoggedIn(content):
-    
+
     conn = db_connection()
     cur = conn.cursor()
 
@@ -514,10 +553,10 @@ def isLoggedIn(content):
     return status
 
 def isAdmin(content):
-    
+
     if not isLoggedIn(content):
         return jsonify({"authError": "Please log in before executing this"})
-    
+
     else:
         conn = db_connection()
         cur = conn.cursor()
@@ -525,7 +564,7 @@ def isAdmin(content):
         values = [content["authcode"]]
         cur.execute(statement, values)
         admin = cur.fetchall()
-            
+
         if admin[0][0] == True:
             return True;
         else:
