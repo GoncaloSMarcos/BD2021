@@ -708,7 +708,7 @@
 			"response": []
 		},
 		{
-			"name": "Ban User",
+			"name": "Banir Utilizador",
 			"request": {
 				"method": "PUT",
 				"header": [],

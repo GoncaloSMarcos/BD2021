@@ -873,8 +873,8 @@ def isLoggedIn(content):
 def isAdmin(content):
 
     if not isLoggedIn(content):
-        return jsonify({"authError": "Please log in before executing this"})
-
+        return False
+        
     else:
         conn = db_connection()
         cur = conn.cursor()
