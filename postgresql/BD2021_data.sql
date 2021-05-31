@@ -162,17 +162,29 @@ $$
 DECLARE
 	v_versao INTEGER;
 	v_username VARCHAR;
+	v_creator_username VARCHAR;
 	v_terminado BOOL;
 	v_cancelled BOOL;
+	v_admin BOOL;
 BEGIN
 	-- get versao do leilao
-	SELECT versao, terminado, cancelled
-   	INTO v_versao, v_terminado, v_cancelled
+	SELECT versao, terminado, cancelled, creator_username
+   	INTO v_versao, v_terminado, v_cancelled, v_creator_username
    	FROM leilao
    	WHERE leilao.id_leilao = v_id_leilao;
 
 	IF v_terminado = true OR v_cancelled = true THEN
 		RETURN false;
+	END IF;
+
+	-- get username from authcode
+	SELECT username, admin
+   	INTO v_username, v_admin
+   	FROM utilizador
+   	WHERE utilizador.authcode = v_authcode;
+
+	IF v_username != v_creator_username AND v_admin != true THEN
+		return false;
 	END IF;
 
 	-- atualizar versao
@@ -183,11 +195,6 @@ BEGIN
 	SET cancelled = true
 	WHERE leilao.id_leilao = v_id_leilao;
 
-	-- get username from authcode
-	SELECT username
-   	INTO v_username
-   	FROM utilizador
-   	WHERE utilizador.authcode = v_authcode;
 
 	INSERT INTO leilao (id_leilao, titulo, momento_fim, preco_minimo, descricao, versao, id_familia, cancelled, artigo_id, creator_username, terminado)
 	VALUES (DEFAULT, v_titulo, v_momento_fim, v_preco_minimo, v_descricao, v_versao, v_id_leilao, false, v_artigo_id, v_username, false);

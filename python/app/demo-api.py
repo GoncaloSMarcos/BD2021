@@ -667,15 +667,13 @@ def ban_user(username):
         cur.execute(statement, values)
 
         # Invalidar todas as licitacoes superiores
+       
         statement ="""
-                    HELP
+                    SELECT id_leilao from leilao
                     """
-
         values = (True, username)
 
         cur.execute(statement, values)
-
-
 
         # Criar mensagem no moral
         """
