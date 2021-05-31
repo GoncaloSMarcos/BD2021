@@ -171,7 +171,7 @@ BEGIN
 	SELECT versao, terminado, cancelled, creator_username
    	INTO v_versao, v_terminado, v_cancelled, v_creator_username
    	FROM leilao
-   	WHERE leilao.id_leilao = v_id_leilao;
+   	WHERE leilao.id_familia = v_id_leilao AND leilao.cancelled = false;
 
 	IF v_terminado = true OR v_cancelled = true THEN
 		RETURN false;
