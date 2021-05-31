@@ -7,9 +7,21 @@
 	"item": [
 		{
 			"name": "Listar Utilizadores",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
 				"method": "GET",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"authcode\":\"1\"\r\n}" ,
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
 					"raw": "http://localhost:8080/dbproj/user",
 					"protocol": "http",
@@ -35,7 +47,12 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"authcode\":\"1\"\r\n}"
+					"raw": "{\r\n    \"authcode\":\"1\"\r\n}", 
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
 				},
 				"url": {
 					"raw": "http://localhost:8080/dbproj/user/UserTeste",
