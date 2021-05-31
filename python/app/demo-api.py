@@ -654,7 +654,7 @@ def login():
     conn.close()
     return jsonify(result)
 
-#BAN USER
+#BANIR UTILIZADOR
 @app.route("/dbproj/user/<username>/ban", methods=['PUT'])
 def ban_user(username):
     logger.info("###              PUT /dbproj/user/<username>/ban              ###")
@@ -704,20 +704,30 @@ def ban_user(username):
 
         cur.execute(statement, values)
 
-        # # Invalidar todas as licitacoes superiores
-        # statement ="""
-        #             HELP
-        #             """
-        #
-        # values = (True, username)
-        #
-        # cur.execute(statement, values)
+        cur.execute("SELECT DISTINCT leilao_id_leilao FROM licitacao where utilizador_username = %s", (username,))
+        rows = cur.fetchall();
 
-            # Criar mensagem no moral
-        """
-        Automaticamente é criada uma mensagem no mural dos leilões afetados lamentando o
-        incómodo e todos os utilizadores envolvidos devem receber uma notificação.
-        """
+        logger.debug(rows)
+
+        for row in rows:
+            cur.execute("SELECT * FROM licitacao where leilao_id_leilao = %s AND utilizador_username = %s ORDER BY valor DESC LIMIT 1", (row[0], username))
+            maior_licitacao_banned = cur.fetchall();
+
+            logger.debug(maior_licitacao_banned)
+
+            cur.execute("SELECT * FROM licitacao where leilao_id_leilao = %s AND valor > %s ORDER BY valor DESC", (row[0], maior_licitacao_banned[0][1]))
+            licitacoes_afetadas = cur.fetchall();
+
+            logger.debug(licitacoes_afetadas)
+
+            for i in range(len(licitacoes_afetadas)):
+                licitacao = licitacoes_afetadas[i];
+                
+                if i == 0:
+                    cur.execute("UPDATE licitacao SET valor = %s WHERE id = %s", (maior_licitacao_banned[0][1], licitacao[0]))
+
+                else:
+                    cur.execute("INSERT INTO notificacao VALUES(DEFAULT, 'A sua licitação foi invalidada porque um utilizador foi banido.', %s, %s)", (maior_licitacao_banned[0][4], row[0]));
 
         result = f'Updated: {cur.rowcount}'
         cur.execute("commit")
@@ -874,7 +884,7 @@ def isAdmin(content):
 
     if not isLoggedIn(content):
         return False
-        
+
     else:
         conn = db_connection()
         cur = conn.cursor()

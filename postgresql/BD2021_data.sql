@@ -358,29 +358,46 @@ CREATE TRIGGER notify_users_of_bid_trigger
 
 
 
-	CREATE OR REPLACE FUNCTION invalidate_bids()
-		RETURNS TRIGGER
-		LANGUAGE plpgsql
-		AS
-		$$
-			DECLARE
-				c1 cursor for SELECT DISTINCT leilao_id_leilao from licitacao where licitacao.utilizador_username = NEW.utilizador_username;
-				v_max_bid licitacao.valor%type;
-				v_cancelled_bid_value licitacao.valor%type;
-			BEGIN
-				--SELECT valor INTO v_cancelled_bid_value FROM old.valor;
-				--INSERT INTO v_cancelled_bid_value VALUES(OLD.valor);
-				c1 := random_portal_name();
-				for r in c1
-				loop
-					SELECT valor INTO v_max_bid FROM licitacao WHERE licitacao.valor = (SELECT MAX(valor) FROM licitacao WHERE licitacao.leilao_id_leilao = r.leilao_id_leilao);
-					UPDATE licitacao SET cancelled = true WHERE (licitacao.valor > OLD.valor AND licitacao.valor < v_max_bid AND licitacao.leilao_id_leilao = r.leilao_id_leilao);
-					--INSERT INTO mensagem VALUES(DEFAULT, CONCAT('User banido e licitacoes alterados no leilao com id: ', CAST(r.leilao_id_leilao as VARCHAR(10))), )
-					--UPDATE licitacao SET valor = OLD.valor WHERE licitacao.valor = (SELECT MAX(valor) FROM licitacao WHERE licitacao.leilao_id_leilao = r.leilao_id_leilao);
-				end loop;
-				RETURN NEW;
-			END;
-		$$;
+CREATE OR REPLACE FUNCTION invalidate_bids()
+	RETURNS TRIGGER
+	LANGUAGE plpgsql
+	AS
+	$$
+		DECLARE
+			c1 cursor for SELECT DISTINCT leilao_id_leilao from licitacao where licitacao.utilizador_username = NEW.utilizador_username;
+
+			--c2 cursor(leilao_id integer, v_max_bid_c INTEGER) for SELECT DISTINCT utilizador_username from licitacao where (licitacao.valor > OLD.valor AND licitacao.valor < v_max_bid_c AND licitacao.leilao_id_leilao = leilao_id);
+
+			v_max_bid licitacao.valor%type;
+			v_cancelled_bid_value licitacao.valor%type;
+			v_creator VARCHAR;
+		BEGIN
+			--SELECT valor INTO v_cancelled_bid_value FROM old.valor;
+			--INSERT INTO v_cancelled_bid_value VALUES(OLD.valor);
+
+			c1 := random_portal_name();
+			for r in c1
+			loop
+				SELECT valor INTO v_max_bid FROM licitacao WHERE licitacao.valor = (SELECT MAX(valor) FROM licitacao WHERE licitacao.leilao_id_leilao = r.leilao_id_leilao);
+				UPDATE licitacao SET cancelled = true WHERE (licitacao.valor > OLD.valor AND licitacao.valor < v_max_bid AND licitacao.leilao_id_leilao = r.leilao_id_leilao);
+				
+				--c2 := random_portal_name();
+				--for r2 in c2(r.leilao_id_leilao, v_max_bid)
+				--loop
+				--	INSERT INTO notificacao VALUES(DEFAULT, 'A sua licitação foi invalidada porque um utilizador foi banido.', r2.utilizador_username, r.leilao_id_leilao);
+				--end loop;
+
+				--UPDATE licitacao SET valor = OLD.valor WHERE licitacao.id = (SELECT id FROM licitacao WHERE licitacao.leilao_id_leilao = r.leilao_id_leilao AND licitacao.valor = v_max_bid);
+				SELECT creator_username
+				INTO v_creator
+				FROM leilao
+				WHERE id_leilao = r.leilao_id_leilao;
+
+				INSERT INTO mensagem VALUES(DEFAULT, 'Foram invalidadas licitações porque um utilizador foi banido da nossa plataforma. Pedimos desculpa pelo incómodo.', v_creator, r.leilao_id_leilao);
+			end loop;
+			RETURN NEW;
+		END;
+	$$;
 
 
 
