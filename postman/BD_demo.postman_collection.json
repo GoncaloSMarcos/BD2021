@@ -678,6 +678,36 @@
 			"response": []
 		},
 		{
+			"name": "Terminar leilões",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/leiloes/end",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"leiloes",
+						"end"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Ban User",
 			"request": {
 				"method": "PUT",

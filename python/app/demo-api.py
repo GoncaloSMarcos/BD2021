@@ -290,7 +290,7 @@ def get_atividade():
         logger.error(error)
         logger.error(type(error))
 
-        return jsonify('ERROR: Leilao missing from database!') # TODO meter algo de jeito aqui
+        return jsonify('Erro: Por favor tente outra vez.')
 
 #EFETUAR LICITACAO
 @app.route("/dbproj/licitar/<leilaoId>/<licitacao>", methods=['GET'])
@@ -364,7 +364,7 @@ def get_vencedores():
 
     cur.execute("SELECT * FROM get_top10_vencedores();")
     rows = cur.fetchall()
-
+    
     output = []
 
     for row in rows:
@@ -544,7 +544,7 @@ def add_leilao():
 
     else:
         cur.execute("ROLLBACK")
-        result = {'Erro': 'Artigo já em venda, por favor escolha outro artigo'}
+        result = {'Erro': 'Artigo já em venda ou hora de término inválida'}
 
     conn.close()
     return jsonify(result)
@@ -608,10 +608,10 @@ def add_message_to_leilao():
 
     if sucessful[0][0]:
         cur.execute("commit")
-        result = 'Teste: Sucedido!' # TODO Mudar isto para outputs adequados
+        result = 'Mensagem adicionada com sucesso!'
     else:
         cur.execute("ROLLBACK")
-        result = 'Teste: Failed!' # TODO Mudar isto para outputs adequados
+        result = 'Erro a adicionar mensagem: Por favor tente outra vez.!'
 
     return jsonify(result)
 
@@ -725,7 +725,7 @@ def ban_user(username):
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
         cur.execute("ROLLBACK")
-        result = 'Failed!' # TODO Mudar isto para outputs adequados
+        result = 'Erro: Por favor tente outra vez!'
     finally:
         if conn is not None:
             conn.close()
@@ -754,10 +754,10 @@ def edit_leilao(id_leilao):
 
     if sucessful[0][0]:
         cur.execute("commit")
-        result = 'Teste: Sucedido!' # TODO Mudar isto para outputs adequados
+        result = 'Leilão editado com sucesso!'
     else:
         cur.execute("ROLLBACK")
-        result = 'Teste: Failed!' # TODO Mudar isto para outputs adequados
+        result = 'Erro: por favor tente outra vez!'
 
     conn.close ()
     return jsonify(result)
@@ -794,7 +794,7 @@ def cancel_leilao(id_leilao):
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
         cur.execute("ROLLBACK")
-        result = 'Failed!' # TODO Mudar isto para outputs adequados
+        result = 'Erro: por favor tente outra vez!'
     finally:
         if conn is not None:
             conn.close()
@@ -803,7 +803,7 @@ def cancel_leilao(id_leilao):
 
 #TERMINAR LEILOES
 @app.route("/dbproj/leiloes/end", methods=['PUT'])
-def terminar_leiloes(id_leilao):
+def terminar_leiloes():
     logger.info("###              PUT /dbproj/leiloes/end              ###")
     payload = request.get_json()
 
@@ -822,18 +822,18 @@ def terminar_leiloes(id_leilao):
     statement ="""
                 UPDATE leilao
                 SET terminado = %s
-                WHERE leilao.momento_fim >= CURRENT_TIMESTAMP()"""
+                WHERE leilao.momento_fim >= CURRENT_TIMESTAMP AND leilao.terminado = false"""
 
     values = (True,)
 
     try:
         cur.execute(statement, values)
-        result = f'Updated: {cur.rowcount}' # TODO N sei se isto funciona, gonçalo, test it
+        result = f'Updated: {cur.rowcount}'
         cur.execute("commit")
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
         cur.execute("ROLLBACK")
-        result = 'Failed!' # TODO Mudar isto para outputs adequados
+        result = 'Erro: Por favor tente outra vez.'
     finally:
         if conn is not None:
             conn.close()

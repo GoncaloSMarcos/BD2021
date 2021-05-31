@@ -142,7 +142,7 @@ BEGIN
 	FROM leilao
 	WHERE leilao.artigo_id = v_artigo_id;
 
-	IF v_inLeilao = 0 THEN
+	IF v_inLeilao = 0 AND v_momento_fim > CURRENT_TIMESTAMP THEN
 		INSERT INTO leilao (id_leilao, titulo, momento_fim, preco_minimo, descricao, versao, id_familia, cancelled, artigo_id, creator_username, terminado)
     	VALUES (DEFAULT, v_titulo, v_momento_fim, v_preco_minimo, v_descricao, 1, DEFAULT, false, v_artigo_id, v_username, false)
 		RETURNING id_leilao INTO v_id;
