@@ -42,6 +42,43 @@ def get_all_users():
     conn.close()
     return jsonify(payload)
 
+#GET USER BY USERNAME
+@app.route("/dbproj/user/<username>", methods=['GET'])
+def get_user(username):
+
+    logger.info("###              GET /user/<username>              ###");
+    payload = request.get_json()
+
+    if not isLoggedIn(payload):
+        return jsonify({"authError": "Please log in before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    try:
+        statement = "SELECT * FROM utilizador WHERE utilizador.username = %s"
+        values = [username]
+        cur.execute(statement, values)
+        rows = cur.fetchall()
+        logger.info(rows);
+
+        output = []
+        for row in rows:
+            content = {'username': row[0], 'email': row[1], 'password': row[2], 'banned': row[3], 'admin': row[4], 'authcode': row[5]}
+            output.append(content)
+
+        conn.close ()
+        if output == []:
+            return jsonify('ERROR: User missing from database!')
+        else:
+            return jsonify(output)
+
+    except (Exception) as error:
+        logger.error(error)
+        logger.error(type(error))
+
+        return jsonify('ERROR: User missing from database!')
+
 #GET ALL LEILOES
 @app.route("/dbproj/leiloes/", methods=['GET'])
 def get_all_leiloes():
@@ -55,13 +92,17 @@ def get_all_leiloes():
     conn = db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id FROM leilao")
+    cur.execute("SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id, cancelled FROM leilao")
     rows = cur.fetchall()
 
     payload = []
 
     for row in rows:
-        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8])}
+        aux = getHighestBidder(row[0])
+        if aux[0] != None:
+            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
+        else:
+            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0], 'highestBidder': aux[1]}
         payload.append(content) # appending to the payload to be returned
 
     conn.close()
@@ -80,24 +121,28 @@ def get_leilao(id_leilao):
     conn = db_connection()
     cur = conn.cursor()
 
-    try:
-        cur.execute("""SELECT id_leilao, titulo, momento_fim, preco_minimo, descricao, cancelled, artigo_id, creator_username
-                    FROM leilao
-                    WHERE leilao.id_leilao = %s""", (id_leilao,) )
+    #try:
+    cur.execute("""SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id, cancelled
+                FROM leilao
+                WHERE leilao.id_leilao = %s""", (id_leilao,) )
+    rows = cur.fetchall()
+    row = rows[0]
+    logger.info(rows)
 
-        rows = cur.fetchall()
-        row = rows[0]
+    aux = getHighestBidder(row[0])
+    if aux[0] != None:
+        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
+    else:
+        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': None, 'highestBidder': None}
 
-        content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'cancelled': row[5], 'artigo_id': int(row[6]), 'creator_username': row[7]}
+    conn.close ()
+    return jsonify(content)
 
-        conn.close ()
-        return jsonify(content)
-
-    except (Exception) as error:
-        logger.error(error)
-        logger.error(type(error))
-
-        return jsonify('ERROR: Leilao missing from database!')
+    # except (Exception) as error:
+    #     logger.error(error)
+    #     logger.error(type(error))
+    #
+    #     return jsonify('ERROR: Leilao missing from database!')
 
 #GET ALL ARTIGOS
 @app.route("/dbproj/artigo/", methods=['GET'])
@@ -138,13 +183,17 @@ def get_leilao_keyword(keyword):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"SELECT id_leilao, descricao FROM leilao WHERE CAST(id_leilao as VARCHAR(10)) = '{keyword}' OR descricao LIKE '%{keyword}%'")      #id_leilao*1 = id_leilao significa se e numerico
+        cur.execute(f"SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id, cancelled FROM leilao WHERE (CAST(id_leilao as VARCHAR(10)) = '{keyword}' OR descricao LIKE '%{keyword}%') AND leilao.cancelled = false")      #id_leilao*1 = id_leilao significa se e numerico
         rows = cur.fetchall()
 
         output = []
 
         for row in rows:
-            content = {'id_leilao': int(row[0]), 'descricao': row[1]}
+            aux = getHighestBidder(row[0])
+            if aux[0] != None:
+                content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
+            else:
+                content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0], 'highestBidder': aux[1]}
             output.append(content)
 
         conn.close ()
@@ -174,7 +223,8 @@ def get_historico(id_leilao):
                         FROM leilao
                         WHERE leilao.id_familia = (SELECT id_familia
                                                    FROM leilao
-                                                   WHERE leilao.id_leilao = {id_leilao})""")
+                                                   WHERE leilao.id_leilao = {id_leilao})
+                        ORDER BY versao DESC""")
         rows = cur.fetchall()
 
         output = []
@@ -206,25 +256,23 @@ def get_atividade():
     cur = conn.cursor()
 
     try:
-        cur.execute("SELECT get_atividade(%s);", (payload["authcode"],))
+        cur.execute("SELECT * FROM get_atividade(%s);", (payload["authcode"],))
         rows = cur.fetchall()
-
-        logger.debug(rows)
 
         output = []
 
         for row in rows:
-            content = {'id_leilao': int(row[0]), 'descricao': row[1]}
+            content = {'versao': int(row[0]), 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4]}
             output.append(content)
 
-        conn.close ()
+        conn.close()
         return jsonify(output)
 
     except (Exception) as error:
         logger.error(error)
         logger.error(type(error))
 
-        return jsonify('ERROR: Leilao missing from database!')
+        return jsonify('ERROR: Leilao missing from database!') # TODO meter algo de jeito aqui
 
 #EFETUAR LICITACAO
 @app.route("/dbproj/licitar/<leilaoId>/<licitacao>", methods=['GET'])
@@ -249,8 +297,82 @@ def licitar(leilaoId, licitacao):
     else:
         result = 'Erro! Verifique se está a licitar um valor superior ao atual e ao preço mínimo.'
 
-    conn.close ()
+    conn.close()
     return jsonify(result)
+
+#LISTAR CRIADORES
+@app.route("/dbproj/estatisticas/criadores", methods=['GET'])
+def get_criadores():
+
+    logger.info("###              GET /dbproj/estatisticas/criadores             ###");
+
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Please log in with an admin user before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM get_top10_criadores(%s);", (payload["authcode"],))
+    rows = cur.fetchall()
+
+    output = []
+
+    for row in rows:
+        content = {'username': row[0], 'n leiloes criados': row[1]}
+        output.append(content)
+
+    conn.close()
+    return jsonify(output)
+
+#LISTAR VENCEDORES
+@app.route("/dbproj/estatisticas/vencedores", methods=['GET'])
+def get_vencedores():
+
+    logger.info("###              GET /dbproj/estatisticas/vencedores              ###");
+
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Please log in with an admin user before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM get_top10_vencedores(%s);", (payload["authcode"],))
+    rows = cur.fetchall()
+
+    output = []
+
+    for row in rows:
+        content = {'username': row[0], 'n leiloes ganhos': row[1]}
+        output.append(content)
+
+    conn.close()
+    return jsonify(output)
+
+#LISTAR LEILOES 10 DIAS
+@app.route("/dbproj/estatisticas/total", methods=['GET'])
+def get_leiloes_10dias():
+
+    logger.info("###              GET /dbproj/estatisticas/total              ###");
+
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Please log in with an admin user before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT get_leiloes_10dias();")
+    total = cur.fetchall()
+
+    content = {'Total de leilões nos últimos 10 dias': total[0][0]}
+
+    conn.close()
+    return jsonify(content)
 
 
 #ENDPOINT PARA MENSAGENS (RECEBE ID DO LEILAO)
@@ -399,7 +521,7 @@ def add_artigo():
 @app.route("/dbproj/leilao/message", methods=['POST'])
 def add_message_to_leilao():
 
-    logger.info("###              GET /dbproj/leilao/message              ###");
+    logger.info("###              POST /dbproj/leilao/message              ###");
     payload = request.get_json()
 
     if not isLoggedIn(payload):
@@ -459,6 +581,81 @@ def login():
     conn.close()
     return jsonify(result)
 
+#BAN USER
+@app.route("/dbproj/user/<username>/ban", methods=['PUT'])
+def ban_user(username):
+    logger.info("###              PUT /dbproj/user/<username>/ban              ###")
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Admin permissions needed"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.info("---- ban user  ----")
+
+    try:
+        # Colocar o atribudo "banned" a True
+        statement ="""
+                    UPDATE utilizador
+                    SET banned = %s
+                    WHERE username = %s"""
+
+        values = (True, username)
+
+        cur.execute(statement, values)
+
+        # Cancelar todos os leiloes desse utilizador
+        statement ="""
+                    UPDATE leilao
+                    SET cancelled = %s
+                    WHERE creator_username = %s"""
+
+        values = (True, username)
+
+        cur.execute(statement, values)
+
+        # Invalidar todas as licitacoes desse utilizador
+        statement ="""
+                    UPDATE licitacao
+                    SET cancelled = %s
+                    WHERE utilizador_username = %s"""
+
+        values = (True, username)
+
+        cur.execute(statement, values)
+
+        # Invalidar todas as licitacoes superiores
+        statement ="""
+                    HELP
+                    """
+
+        values = (True, username)
+
+        cur.execute(statement, values)
+
+
+
+        # Criar mensagem no moral
+        """
+Automaticamente é criada uma mensagem no mural dos leilões afetados lamentando o
+incómodo e todos os utilizadores envolvidos devem receber uma notificação.
+        """
+
+        result = f'Updated: {cur.rowcount}'
+        cur.execute("commit")
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        result = 'Failed!' # TODO Mudar isto para outputs adequados
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return jsonify(result)
+
+
 # EDIT LEILAO
 @app.route("/dbproj/leilao/<id_leilao>", methods=['PUT'])
 def edit_leilao(id_leilao):
@@ -502,14 +699,13 @@ def cancel_leilao(id_leilao):
     # parameterized queries, good for security and performance
     statement ="""
                 UPDATE leilao
-                  SET cancelled = %s
+                SET cancelled = %s
                 WHERE id_leilao = %s"""
-
 
     values = (True, id_leilao)
 
     try:
-        res = cur.execute(statement, values)
+        cur.execute(statement, values)
         result = f'Updated: {cur.rowcount}'
         cur.execute("commit")
     except (Exception, psycopg2.DatabaseError) as error:
@@ -521,6 +717,40 @@ def cancel_leilao(id_leilao):
 
     return jsonify(result)
 
+#TERMINAR LEILOES
+@app.route("/dbproj/leiloes/end", methods=['PUT'])
+def terminar_leiloes(id_leilao):
+    logger.info("###              PUT /dbproj/leiloes/end              ###")
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Admin permissions needed"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.info("---- terminar leiloes  ----")
+
+    # parameterized queries, good for security and performance
+    statement ="""
+                UPDATE leilao
+                SET terminado = %s
+                WHERE leilao.momento_fim >= CURRENT_TIMESTAMP()"""
+
+    values = (True,)
+
+    try:
+        cur.execute(statement, values)
+        result = f'Updated: {cur.rowcount}' # TODO N sei se isto funciona, gonçalo, test it
+        cur.execute("commit")
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        result = 'Failed!' # TODO Mudar isto para outputs adequados
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return jsonify(result)
 
 ##########################################################
 ## AUXILIARY FUNCTIONS
@@ -537,7 +767,7 @@ def isLoggedIn(content):
     logger.info("----  AUX: isLoggedIn  ----")
     logger.info(f'content: {content}')
 
-    statement = "SELECT count(*) FROM utilizador WHERE utilizador.authcode = %s"
+    statement = "SELECT count(*) FROM utilizador WHERE utilizador.authcode = %s and utilizador.banned = false"
     values = [content["authcode"]]
 
     cur.execute(statement, values)
@@ -570,6 +800,34 @@ def isAdmin(content):
         else:
             return False;
         conn.close()
+
+def getHighestBidder(id_leilao):
+
+    conn = db_connection()
+    cur = conn.cursor()
+    # procurar a maior bid associada ao leilao em questao e o nome do user que a fez
+    statement = """SELECT utilizador_username, MAX(valor)
+    FROM licitacao
+    WHERE licitacao.leilao_id_leilao = %s AND licitacao.cancelled = false
+    GROUP BY utilizador_username
+    """
+    values = [id_leilao]
+    cur.execute(statement, values)
+    highest = cur.fetchall();
+
+    # Quando nao ha bid nenhuma
+    if highest == []:
+        return (None, None)
+
+    # Se houver bid vai buscar a info toda do user que a fez
+    utilizador_username = highest[0][0];
+    statement = "SELECT * FROM utilizador WHERE utilizador.username = %s"
+    values = [utilizador_username]
+    cur.execute(statement, values)
+    user = cur.fetchall();
+
+    conn.close()
+    return (highest,user);
 
 ##########################################################
 ## DATABASE ACCESS
