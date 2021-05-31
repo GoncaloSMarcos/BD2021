@@ -98,12 +98,7 @@ def get_all_leiloes():
     payload = []
 
     for row in rows:
-        aux = getHighestBidder(row[0])
-        if aux[0] != None:
-            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
-        else:
-            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0], 'highestBidder': aux[1]}
-
+        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': getHighestBidder(row[0])[0][0][1], 'highestBidder': getHighestBidder(row[0])[1][0][0]}
         payload.append(content) # appending to the payload to be returned
 
     conn.close()
@@ -130,11 +125,7 @@ def get_leilao(id_leilao):
         rows = cur.fetchall()
         row = rows[0]
 
-        aux = getHighestBidder(row[0])
-        if aux[0] != None:
-            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
-        else:
-            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0], 'highestBidder': aux[1]}
+        content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'artigo_id': int(row[5]), 'creator_username': row[6], 'highestBid': getHighestBidder(row[0])[0][0][1], 'highestBidder': getHighestBidder(row[0])[1][0][0]}
 
         conn.close ()
         return jsonify(content)
@@ -190,11 +181,7 @@ def get_leilao_keyword(keyword):
         output = []
 
         for row in rows:
-            aux = getHighestBidder(row[0])
-            if aux[0] != None:
-                content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
-            else:
-                content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0], 'highestBidder': aux[1]}
+            content = {'id_leilao': int(row[0]), 'titulo': row[1], 'momento_fim': row[2], 'preco_minimo': int(row[3]), 'descricao': row[4], 'artigo_id': int(row[5]), 'creator_username': row[6], 'highestBid': getHighestBidder(row[0])[0][0][1], 'highestBidder': getHighestBidder(row[0])[1][0][0]}
             output.append(content)
 
         conn.close ()
@@ -776,7 +763,7 @@ def getHighestBidder(id_leilao):
     values = [id_leilao]
     cur.execute(statement, values)
     highest = cur.fetchall();
-       
+    
     # Quando nao ha bid nenhuma 
     if highest == []:
         return (None, None)
