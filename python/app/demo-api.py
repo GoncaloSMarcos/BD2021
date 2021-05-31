@@ -60,7 +60,7 @@ def get_user(username):
     cur = conn.cursor()
 
     try:
-        statement = "SELECT * FROM utilizador WHERE utilizador.username = %s"
+        statement = "SELECT username, email FROM utilizador WHERE utilizador.username = %s"
         values = [username]
         cur.execute(statement, values)
         rows = cur.fetchall()
@@ -68,7 +68,7 @@ def get_user(username):
 
         output = []
         for row in rows:
-            content = {'username': row[0], 'email': row[1], 'password': row[2], 'banned': row[3], 'admin': row[4], 'authcode': row[5]}
+            content = {'username': row[0], 'email': row[1]}
             output.append(content)
 
         conn.close ()
@@ -223,7 +223,7 @@ def get_historico(id_leilao):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"""SELECT id_leilao, descricao
+        cur.execute(f"""SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, artigo_id
                         FROM leilao
                         WHERE leilao.id_familia = (SELECT id_familia
                                                    FROM leilao
@@ -234,7 +234,7 @@ def get_historico(id_leilao):
         output = []
 
         for row in rows:
-            content = {'id_leilao': int(row[0]), 'descricao': row[1]}
+            content = {'id_leilao': int(row[0]), 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'artigo_id': row[7]}
             output.append(content)
 
         conn.close ()
