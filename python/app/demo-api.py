@@ -126,7 +126,7 @@ def get_leilao(id_leilao):
     cur = conn.cursor()
 
     try:
-        cur.execute("""SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id, cancelled
+        cur.execute("""SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id, cancelled, vencedor_username
                     FROM leilao
                     WHERE leilao.id_leilao = %s""", (id_leilao,) )
         rows = cur.fetchall()
@@ -134,7 +134,7 @@ def get_leilao(id_leilao):
 
         aux = getHighestBidder(row[0])
         if aux[0] != None:
-            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
+            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0], 'vencedorUsername': row[10]}
         else:
             content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': None, 'highestBidder': None}
 
@@ -825,10 +825,26 @@ def terminar_leiloes():
                 WHERE leilao.momento_fim >= CURRENT_TIMESTAMP AND leilao.terminado = false"""
 
     values = (True,)
-
+    
     try:
         cur.execute(statement, values)
         result = f'Updated: {cur.rowcount}'
+        
+        statement ="""
+                SELECT id_leilao FROM leilao WHERE leilao.terminado = true
+                """
+        cur.execute(statement)
+        rows = cur.fetchall()
+        for row in rows:
+            statement ="""
+                UPDATE leilao
+                SET vencedor_username = %s
+                WHERE leilao.terminado = true and leilao.id_leilao = %s"""
+            logger.info(row[0])
+            logger.info(getHighestBidder(row[0]))
+            values = (getHighestBidder(row[0])[1][0][0], row[0])
+            cur.execute(statement, values)
+        
         cur.execute("commit")
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
