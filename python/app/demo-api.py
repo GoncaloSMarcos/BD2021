@@ -336,7 +336,7 @@ def get_criadores():
     conn = db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM get_top10_criadores(%s);", (payload["authcode"],))
+    cur.execute("SELECT * FROM get_top10_criadores();")
     rows = cur.fetchall()
 
     output = []
@@ -362,7 +362,7 @@ def get_vencedores():
     conn = db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM get_top10_vencedores(%s);", (payload["authcode"],))
+    cur.execute("SELECT * FROM get_top10_vencedores();")
     rows = cur.fetchall()
 
     output = []
