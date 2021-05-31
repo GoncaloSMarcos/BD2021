@@ -26,6 +26,10 @@ def hello():
 def get_all_users():
 
     logger.info("###              GET /dbproj/user/              ###")
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Please log in with an admin user before executing this"})
 
     conn = db_connection()
     cur = conn.cursor()
@@ -36,7 +40,7 @@ def get_all_users():
     payload = []
 
     for row in rows:
-        content = {'username': row[0], 'email': row[1], 'password': row[2], 'banned': row[3], 'admin': row[4], 'authcode': row[5]}
+        content = {'username': row[0], 'email': row[1], 'banned': row[3], 'admin': row[4], 'authcode': row[5]}
         payload.append(content) # appending to the payload to be returned
 
     conn.close()
