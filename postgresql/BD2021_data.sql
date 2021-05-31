@@ -394,7 +394,7 @@ CREATE TRIGGER invalidate_bids_trigger
 
 
 
-CREATE OR REPLACE FUNCTION get_top10_criadores(v_authcode INTEGER)
+CREATE OR REPLACE FUNCTION get_top10_criadores()
 	RETURNS TABLE (
 				t_username VARCHAR,
 				t_count BIGINT
@@ -403,24 +403,34 @@ CREATE OR REPLACE FUNCTION get_top10_criadores(v_authcode INTEGER)
 	AS
 	$$
 	DECLARE
-	v_username VARCHAR;
+		c1 CURSOR for SELECT DISTINCT creator_username FROM leilao WHERE cancelled = false;
+		v_username VARCHAR;
+		v_count BIGINT;
 	BEGIN
-			-- obter username atraves de authCode
-		SELECT username
-		INTO v_username
-		FROM utilizador
-		WHERE utilizador.authcode = v_authcode;
 
-		RETURN QUERY SELECT creator_username, count(leilao.creator_username = v_username)
-					 FROM leilao
-					 GROUP BY creator_username, cancelled
-					 HAVING cancelled = false
-				 	 ORDER BY count(leilao.creator_username = v_username) DESC
-				 	 LIMIT 10;
+		CREATE TEMPORARY TABLE temp(
+									temp_user VARCHAR,
+									temp_count BIGINT
+									);
+		
+		for r in c1
+		loop
+			SELECT creator_username, count(*)
+			INTO v_username, v_count
+			FROM leilao
+			GROUP BY creator_username, cancelled
+			HAVING creator_username = r.creator_username AND cancelled = false;
+			INSERT INTO temp VALUES(v_username, v_count);
+		end loop;
+
+		RETURN QUERY SELECT * 
+					 FROM temp
+					 ORDER BY temp_count DESC
+					 LIMIT 10;
 	END;
 $$;
 
-CREATE OR REPLACE FUNCTION get_top10_vencedores(v_authcode INTEGER)
+CREATE OR REPLACE FUNCTION get_top10_vencedores()
 	RETURNS TABLE (
 			t_username VARCHAR,
 			t_count BIGINT
@@ -429,20 +439,30 @@ CREATE OR REPLACE FUNCTION get_top10_vencedores(v_authcode INTEGER)
 	AS
 	$$
 	DECLARE
-			v_username VARCHAR;
+		c1 CURSOR for SELECT DISTINCT vencedor_username FROM leilao WHERE vencedor_username IS NOT NULL AND cancelled = false;
+		v_username VARCHAR;
+		v_count BIGINT;
 	BEGIN
-		-- obter username atraves de authCode
-		SELECT username
-		INTO v_username
-		FROM utilizador
-		WHERE utilizador.authcode = v_authcode;
 
-		RETURN QUERY SELECT creator_username, count(leilao.vencedor_username = v_username)
-					 FROM leilao
-					 GROUP BY creator_username, cancelled
-					 HAVING cancelled = false
-				 	 ORDER BY count(leilao.vencedor_username = v_username) DESC
-				 	 LIMIT 10;
+		CREATE TEMPORARY TABLE temp(
+									temp_user VARCHAR,
+									temp_count BIGINT
+									);
+		
+		for r in c1
+		loop
+			SELECT vencedor_username, count(*)
+			INTO v_username, v_count
+			FROM leilao
+			GROUP BY vencedor_username, cancelled
+			HAVING vencedor_username = r.vencedor_username AND cancelled = false;
+			INSERT INTO temp VALUES(v_username, v_count);
+		end loop;
+
+		RETURN QUERY SELECT * 
+					 FROM temp
+					 ORDER BY temp_count DESC
+					 LIMIT 10;
 	END;
 $$;
 
