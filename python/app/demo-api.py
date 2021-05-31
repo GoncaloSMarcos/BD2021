@@ -78,7 +78,7 @@ def get_user(username):
         logger.error(type(error))
 
         return jsonify('ERROR: User missing from database!')
-
+    
 #GET ALL LEILOES
 @app.route("/dbproj/leiloes/", methods=['GET'])
 def get_all_leiloes():
@@ -529,6 +529,81 @@ def login():
 
     conn.close()
     return jsonify(result)
+
+#BAN USER
+@app.route("/dbproj/user/<username>/ban", methods=['PUT'])
+def ban_user(username):
+    logger.info("###              PUT /dbproj/user/<username>/ban              ###")
+    payload = request.get_json()
+
+    if not isAdmin(payload):
+        return jsonify({"authError": "Admin permissions needed"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.info("---- ban user  ----")
+
+    try:
+        # Colocar o atribudo "banned" a True
+        statement ="""
+                    UPDATE utilizador 
+                    SET banned = %s
+                    WHERE username = %s"""
+
+        values = (True, username)
+        
+        cur.execute(statement, values)
+        
+        # Cancelar todos os leiloes desse utilizador
+        statement ="""
+                    UPDATE leilao 
+                    SET cancelled = %s
+                    WHERE creator_username = %s"""
+
+        values = (True, username)
+        
+        cur.execute(statement, values)
+        
+        # Invalidar todas as licitacoes desse utilizador
+        statement ="""
+                    UPDATE licitacao 
+                    SET cancelled = %s
+                    WHERE utilizador_username = %s"""
+
+        values = (True, username)
+        
+        cur.execute(statement, values)
+        
+        # Invalidar todas as licitacoes superiores
+        statement ="""
+                    HELP
+                    """
+
+        values = (True, username)
+        
+        cur.execute(statement, values)
+        
+        
+        
+        # Criar mensagem no moral
+        """
+Automaticamente é criada uma mensagem no mural dos leilões afetados lamentando o
+incómodo e todos os utilizadores envolvidos devem receber uma notificação.
+        """
+        
+        result = f'Updated: {cur.rowcount}'
+        cur.execute("commit")
+        
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        result = 'Failed!' # TODO Mudar isto para outputs adequados
+    finally:
+        if conn is not None:
+            conn.close()
+    
+    return jsonify(result)
+
 
 # EDIT LEILAO
 @app.route("/dbproj/leilao/<id_leilao>", methods=['PUT'])
