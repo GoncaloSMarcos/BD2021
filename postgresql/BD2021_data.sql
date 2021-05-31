@@ -161,6 +161,7 @@ AS
 $$
 DECLARE
 	v_versao INTEGER;
+	v_id_leilao_geral INTEGER;
 	v_username VARCHAR;
 	v_creator_username VARCHAR;
 	v_terminado BOOL;
@@ -168,8 +169,8 @@ DECLARE
 	v_admin BOOL;
 BEGIN
 	-- get versao do leilao
-	SELECT versao, terminado, cancelled, creator_username
-   	INTO v_versao, v_terminado, v_cancelled, v_creator_username
+	SELECT id_leilao, versao, terminado, cancelled, creator_username
+   	INTO v_id_leilao_geral, v_versao, v_terminado, v_cancelled, v_creator_username
    	FROM leilao
    	WHERE leilao.id_familia = v_id_leilao AND leilao.cancelled = false;
 
@@ -193,7 +194,7 @@ BEGIN
 	-- cancelar leilao anterior
 	UPDATE leilao
 	SET cancelled = true
-	WHERE leilao.id_leilao = v_id_leilao;
+	WHERE leilao.id_leilao = v_id_leilao_geral;
 
 
 	INSERT INTO leilao (id_leilao, titulo, momento_fim, preco_minimo, descricao, versao, id_familia, cancelled, artigo_id, creator_username, terminado)
