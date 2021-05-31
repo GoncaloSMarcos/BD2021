@@ -714,10 +714,10 @@ def ban_user(username):
         # cur.execute(statement, values)
 
             # Criar mensagem no moral
-            """
-            Automaticamente é criada uma mensagem no mural dos leilões afetados lamentando o
-            incómodo e todos os utilizadores envolvidos devem receber uma notificação.
-            """
+        """
+        Automaticamente é criada uma mensagem no mural dos leilões afetados lamentando o
+        incómodo e todos os utilizadores envolvidos devem receber uma notificação.
+        """
 
         result = f'Updated: {cur.rowcount}'
         cur.execute("commit")

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "cac50b0d-3914-42da-b980-40d2abaebf28",
+		"_postman_id": "da9b4633-a06a-415d-9576-7628bf5d3b2a",
 		"name": "BD_demo",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -161,7 +161,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"authcode\": \"4\"\n}",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -392,7 +392,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"authcode\": \"2\"\n}",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -425,7 +425,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"authcode\": \"2\"\n}",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -433,7 +433,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/dbproj/leilao/mural/2",
+					"raw": "http://localhost:8080/dbproj/leilao/mural/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -443,7 +443,7 @@
 						"dbproj",
 						"leilao",
 						"mural",
-						"2"
+						"1"
 					]
 				}
 			},
@@ -456,7 +456,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"username\": \"UserTeste4\", \n    \"email\": \"Email@teste4.com\", \n    \"password\": \"PasswordTeste\",\n    \"admin\": true\n}",
+					"raw": "{\n    \"username\": \"UserTeste\", \n    \"email\": \"Email@teste.com\", \n    \"password\": \"PasswordTeste\",\n    \"admin\": true\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -516,7 +516,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"artigo_id\": \"1\", \n    \"preco_minimo\": \"10\", \n    \"titulo\": \"Leilao1\",\n    \"descricao\":\"este e o segundo leilao\",\n    \"momento_fim\":\"2021-05-27 17:30\",\n    \"authcode\": \"1\"\n}",
+					"raw": "{\n    \"artigo_id\": \"1\", \n    \"preco_minimo\": \"10\", \n    \"titulo\": \"Leilao 1\",\n    \"descricao\":\"este e o primeiro leilao\",\n    \"momento_fim\":\"2021-05-27 17:30\",\n    \"authcode\": \"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -546,7 +546,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"id_leilao\":\"2\",\n    \"conteudo\":\"Segunda mensagem!!!\",\n    \"authcode\": \"2\"\n}",
+					"raw": "{\n    \"id_leilao\": \"1\",\n    \"conteudo\": \"Primeira mensagem\",\n    \"authcode\": \"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -606,7 +606,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"titulo\": \"Leilao1 editado\",\n    \"momento_fim\":\"2021-05-27\",\n    \"preco_minimo\": 22,\n    \"descricao\":\"este e o primeiro leilao editado\",\n    \"id_leilao\":\"1\",\n    \"artigo_id\": \"1\",\n    \"authcode\":\"1\"\n}",
+					"raw": "{\n    \"titulo\": \"Leilao 1 editado\",\n    \"momento_fim\":\"2021-05-27\",\n    \"preco_minimo\": 10,\n    \"descricao\":\"este e o primeiro leilao editado\",\n    \"id_leilao\":\"1\",\n    \"artigo_id\": \"1\",\n    \"authcode\":\"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
