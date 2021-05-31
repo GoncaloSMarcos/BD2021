@@ -465,8 +465,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION get_notificacoes(v_authcode INTEGER)
 RETURNS TABLE (
-		v_conteudo VARCHAR,
-		v_leilao VARCHAR
+		v_conteudo VARCHAR
 		)
 LANGUAGE plpgsql
 AS
@@ -481,8 +480,8 @@ BEGIN
 	WHERE utilizador.authcode = v_authcode;
 
 	-- get leiloes criados ou leiloes nos quais o user participou DOES NOT WORK
-	RETURN QUERY SELECT conteudo, titulo
-				 FROM notificacao, leilao
+	RETURN QUERY SELECT conteudo
+				 FROM notificacao
 				 WHERE notificacao.utilizador_username = v_aux_username;
 END;
 $$;
