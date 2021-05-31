@@ -357,6 +357,53 @@ CREATE TRIGGER notify_users_of_messages_trigger
 
 
 
+	CREATE OR REPLACE FUNCTION random_portal_name()
+	RETURNS varchar as $$
+		begin
+		    create temp sequence if not exists portal_names;
+		    return 'portal$' || nextval('portal_names');
+		end;
+		$$ language plpgsql;
+
+
+
+
+	CREATE OR REPLACE FUNCTION invalidate_bids()
+		RETURNS TRIGGER
+		LANGUAGE plpgsql
+		AS
+		$$
+			DECLARE
+				c1 cursor for SELECT DISTINCT leilao_id_leilao from licitacao where licitacao.utilizador_username = NEW.utilizador_username;
+				v_max_bid licitacao.valor%type;
+				v_cancelled_bid_value licitacao.valor%type;
+			BEGIN
+				--SELECT valor INTO v_cancelled_bid_value FROM old.valor;
+				--INSERT INTO v_cancelled_bid_value VALUES(OLD.valor);
+				c1 := random_portal_name();
+				for r in c1
+				loop
+					SELECT valor INTO v_max_bid FROM licitacao WHERE licitacao.valor = (SELECT MAX(valor) FROM licitacao WHERE licitacao.leilao_id_leilao = r.leilao_id_leilao);
+					UPDATE licitacao SET cancelled = true WHERE (licitacao.valor > OLD.valor AND licitacao.valor < v_max_bid AND licitacao.leilao_id_leilao = r.leilao_id_leilao);
+					--INSERT INTO mensagem VALUES(DEFAULT, CONCAT('User banido e licitacoes alterados no leilao com id: ', CAST(r.leilao_id_leilao as VARCHAR(10))), )
+					--UPDATE licitacao SET valor = OLD.valor WHERE licitacao.valor = (SELECT MAX(valor) FROM licitacao WHERE licitacao.leilao_id_leilao = r.leilao_id_leilao);
+				end loop;
+				RETURN NEW;
+			END;
+		$$;
+
+
+
+
+CREATE TRIGGER invalidate_bids_trigger
+	AFTER UPDATE
+	ON licitacao
+	FOR EACH ROW
+	EXECUTE PROCEDURE invalidate_bids();
+
+
+
+
 CREATE OR REPLACE FUNCTION get_top10_criadores(v_authcode INTEGER)
 	RETURNS TABLE (
 				t_username VARCHAR,
@@ -452,4 +499,27 @@ BEGIN
 				 FROM notificacao, leilao
 				 WHERE notificacao.utilizador_username = v_aux_username;
 END;
+$$;
+
+
+
+
+
+CREATE OR REPLACE FUNCTION notify_cancelled(v_id_leilao INTEGER)
+RETURNS BOOL
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+		--Devolve todos os users associados ao leilao (mandaram mensagem, licitaram ou criaram o leilao)
+		c1 cursor for (SELECT DISTINCT utilizador_username from licitacao where (licitacao.leilao_id_leilao = v_id_leilao) UNION SELECT DISTINCT utilizador_username from mensagem where (mensagem.leilao_id_leilao = v_id_leilao) UNION SELECT creator_username FROM leilao where id_leilao = v_id_leilao);
+	BEGIN
+		--SELECT licitacao.leilao_id_leilao INTO v_id_leilao FROM licitacao where licitacao.id = (SELECT MAX(id) FROM licitacao);
+		--SELECT licitacao.utilizador_username INTO v_last_bidder  FROM licitacao WHERE licitacao.id = (SELECT MAX(id) FROM licitacao);
+		for r in c1
+		loop
+			INSERT INTO notificacao VALUES(DEFAULT, CONCAT('Leilao cancelado! id: ', CAST(v_id_leilao as VARCHAR(10))), r.utilizador_username, v_id_leilao);
+		end loop;
+		RETURN true;
+	END;
 $$;

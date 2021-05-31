@@ -570,16 +570,25 @@ def add_message_to_leilao():
     conn = db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT add_message(%s, %s, %s);", (payload["id_leilao"], payload["conteudo"],payload["authcode"]))
-    sucessful = cur.fetchall()
+    try:
+        cur.execute("SELECT add_message(%s, %s, %s);", (payload["id_leilao"], payload["conteudo"],payload["authcode"]))
+        sucessful = cur.fetchall()
 
-    if sucessful[0][0]:
-        cur.execute("commit")
-        result = 'Teste: Sucedido!' # TODO Mudar isto para outputs adequados
-    else:
-        result = 'Teste: Failed!' # TODO Mudar isto para outputs adequados
+        if sucessful[0][0]:
+            cur.execute("commit")
+            result = 'Teste: Sucedido!' # TODO Mudar isto para outputs adequados
+        else:
+            result = 'Teste: Failed!' # TODO Mudar isto para outputs adequados
 
-    conn.close ()
+        conn.close ()
+        return jsonify(result)
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+        result = {'erro': str(type(error))}
+    finally:
+        if conn is not None:
+            conn.close()
+
     return jsonify(result)
 
 ##########################################################
@@ -635,63 +644,63 @@ def ban_user(username):
 
     logger.info("---- ban user  ----")
 
-    try:
+    #try:
         # Colocar o atribudo "banned" a True
-        statement ="""
-                    UPDATE utilizador
-                    SET banned = %s
-                    WHERE username = %s"""
+    statement ="""
+                UPDATE utilizador
+                SET banned = %s
+                WHERE username = %s"""
 
-        values = (True, username)
+    values = (True, username)
 
-        cur.execute(statement, values)
+    cur.execute(statement, values)
 
-        # Cancelar todos os leiloes desse utilizador
-        statement ="""
-                    UPDATE leilao
-                    SET cancelled = %s
-                    WHERE creator_username = %s"""
+    # Cancelar todos os leiloes desse utilizador
+    statement ="""
+                UPDATE leilao
+                SET cancelled = %s
+                WHERE creator_username = %s"""
 
-        values = (True, username)
+    values = (True, username)
 
-        cur.execute(statement, values)
+    cur.execute(statement, values)
 
-        # Invalidar todas as licitacoes desse utilizador
-        statement ="""
-                    UPDATE licitacao
-                    SET cancelled = %s
-                    WHERE utilizador_username = %s"""
+    # Invalidar todas as licitacoes desse utilizador
+    statement ="""
+                UPDATE licitacao
+                SET cancelled = %s
+                WHERE utilizador_username = %s"""
 
-        values = (True, username)
+    values = (True, username)
 
-        cur.execute(statement, values)
+    cur.execute(statement, values)
 
-        # Invalidar todas as licitacoes superiores
-        statement ="""
-                    HELP
-                    """
+    # # Invalidar todas as licitacoes superiores
+    # statement ="""
+    #             HELP
+    #             """
+    #
+    # values = (True, username)
+    #
+    # cur.execute(statement, values)
 
-        values = (True, username)
-
-        cur.execute(statement, values)
 
 
-
-        # Criar mensagem no moral
-        """
+    # Criar mensagem no moral
+    """
 Automaticamente é criada uma mensagem no mural dos leilões afetados lamentando o
 incómodo e todos os utilizadores envolvidos devem receber uma notificação.
-        """
+    """
 
-        result = f'Updated: {cur.rowcount}'
-        cur.execute("commit")
+    result = f'Updated: {cur.rowcount}'
+    cur.execute("commit")
 
-    except (Exception, psycopg2.DatabaseError) as error:
-        logger.error(error)
-        result = 'Failed!' # TODO Mudar isto para outputs adequados
-    finally:
-        if conn is not None:
-            conn.close()
+    # except (Exception, psycopg2.DatabaseError) as error:
+    #     logger.error(error)
+    #     result = 'Failed!' # TODO Mudar isto para outputs adequados
+    # finally:
+    #     if conn is not None:
+    #         conn.close()
 
     return jsonify(result)
 
@@ -740,9 +749,9 @@ def cancel_leilao(id_leilao):
     statement ="""
                 UPDATE leilao
                 SET cancelled = %s
-                WHERE id_leilao = %s"""
+                WHERE id_leilao = %s; SELECT notify_cancelled(%s)"""
 
-    values = (True, id_leilao)
+    values = (True, id_leilao, id_leilao);
 
     try:
         cur.execute(statement, values)
