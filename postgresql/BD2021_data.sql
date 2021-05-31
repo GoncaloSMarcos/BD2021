@@ -321,6 +321,42 @@ CREATE TRIGGER notify_users_of_messages_trigger
 
 
 
+
+
+	CREATE OR REPLACE FUNCTION notify_users_of_bid()
+		RETURNS TRIGGER
+		LANGUAGE plpgsql
+		AS
+	$$
+		DECLARE
+			c1 cursor for SELECT DISTINCT utilizador_username from licitacao where leilao_id_leilao = (SELECT licitacao.leilao_id_leilao from licitacao where licitacao.id = (SELECT MAX(id) FROM licitacao));
+			v_id_leilao INTEGER;
+			v_last_bidder VARCHAR;
+		BEGIN
+		SELECT licitacao.leilao_id_leilao INTO v_id_leilao FROM licitacao where licitacao.id = (SELECT MAX(id) FROM licitacao);
+		SELECT licitacao.utilizador_username INTO v_last_bidder  FROM licitacao WHERE licitacao.id = (SELECT MAX(id) FROM licitacao);
+			for r in c1
+			loop
+				if (r.utilizador_username is distinct from v_last_bidder) then
+					INSERT INTO notificacao VALUES(DEFAULT, CONCAT('Licitacao ultrapassada no leilao de id: ', CAST(v_id_leilao as VARCHAR(10))), r.utilizador_username, v_id_leilao);
+				end if;
+			end loop;
+			RETURN NEW;
+		END;
+	$$;
+
+
+
+
+	CREATE TRIGGER notify_users_of_bid_trigger
+	  AFTER INSERT
+	  ON licitacao
+	  FOR EACH STATEMENT
+		EXECUTE PROCEDURE notify_users_of_bid();
+
+
+
+
 CREATE OR REPLACE FUNCTION get_top10_criadores(v_authcode INTEGER)
 	RETURNS TABLE (
 				t_username VARCHAR,
@@ -390,4 +426,30 @@ CREATE OR REPLACE FUNCTION get_leiloes_10dias()
 
 		RETURN total;
 	END;
+$$;
+
+
+
+CREATE OR REPLACE FUNCTION get_notificacoes(v_authcode INTEGER)
+RETURNS TABLE (
+		v_conteudo VARCHAR,
+		v_leilao VARCHAR
+		)
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+	v_aux_username VARCHAR;
+BEGIN
+  -- obter username atraves de authCode
+	SELECT username
+	INTO v_aux_username
+	FROM utilizador
+	WHERE utilizador.authcode = v_authcode;
+
+	-- get leiloes criados ou leiloes nos quais o user participou DOES NOT WORK
+	RETURN QUERY SELECT conteudo, titulo
+				 FROM notificacao, leilao
+				 WHERE notificacao.utilizador_username = v_aux_username;
+END;
 $$;

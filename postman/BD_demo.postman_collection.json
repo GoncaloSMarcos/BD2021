@@ -169,7 +169,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/dbproj/licitar/1/100",
+					"raw": "http://localhost:8080/dbproj/licitar/1/130",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -179,7 +179,7 @@
 						"dbproj",
 						"licitar",
 						"1",
-						"100"
+						"130"
 					]
 				}
 			},
@@ -383,13 +383,79 @@
 			"response": []
 		},
 		{
+			"name": "Notificacoes",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/user/notificacoes",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"user",
+						"notificacoes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Mensagens",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"2\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/user/notificacoes",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"user",
+						"notificacoes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Adicionar Utilizador",
 			"request": {
 				"method": "POST",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"username\": \"UserTeste\", \n    \"email\": \"Email@teste.com\", \n    \"password\": \"PasswordTeste\",\n    \"admin\": true\n}",
+					"raw": "{\n    \"username\": \"UserTeste2\", \n    \"email\": \"Email@teste2.com\", \n    \"password\": \"PasswordTeste\",\n    \"admin\": true\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -449,7 +515,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"artigo_id\": \"1\", \n    \"preco_minimo\": \"10\", \n    \"titulo\": \"Leilao3\",\n    \"descricao\":\"este e o terceiro leilao\",\n    \"momento_fim\":\"2021-05-27 17:30\",\n    \"authcode\": \"1\"\n}",
+					"raw": "{\n    \"artigo_id\": \"1\", \n    \"preco_minimo\": \"10\", \n    \"titulo\": \"Leilao1\",\n    \"descricao\":\"este e o primeiro leilao\",\n    \"momento_fim\":\"2021-05-27 17:30\",\n    \"authcode\": \"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -479,7 +545,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"id_leilao\":\"1\",\n    \"conteudo\":\"Terceira mensagem!!!\",\n    \"authcode\": \"2\"\n}",
+					"raw": "{\n    \"id_leilao\":\"1\",\n    \"conteudo\":\"Primeira mensagem!!!\",\n    \"authcode\": \"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"

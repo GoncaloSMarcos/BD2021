@@ -414,6 +414,46 @@ def get_mural_leilao(leilaoId):
         return jsonify('ERROR: Erro a obter mural do leilao!')
 
 
+
+
+@app.route("/dbproj/user/notificacoes", methods=['GET'])
+def get_notificacoes_user():
+
+    logger.info("###              GET /dbproj/leilao/mural/<leilaoId>              ###");
+
+    payload = request.get_json()
+
+    if not isLoggedIn(payload):
+        return jsonify({"authError": "Please log in before executing this"})
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("SELECT * from get_notificacoes(%s);", (payload["authcode"]))
+        logger.info("###        Retrieving Notifications         ###");
+        rows = cur.fetchall()
+        logger.debug(rows)
+
+        output = []
+
+        for row in rows:
+            content = {'Leilao':row[1],'Conteudo':row[0]}
+            #content = {'utilizador':row["v_username"]}
+
+            output.append(content)
+
+        conn.close ()
+        return jsonify(output)
+
+
+    except (Exception) as error:
+        logger.error(error)
+        logger.error(type(error))
+
+        return jsonify('ERROR: Erro a obter mural do leilao!')
+
+
 ##########################################################
 ## POSTS
 ##########################################################
