@@ -125,28 +125,42 @@ def get_leilao(id_leilao):
     conn = db_connection()
     cur = conn.cursor()
 
-    #try:
-    cur.execute("""SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id, cancelled
-                FROM leilao
-                WHERE leilao.id_leilao = %s""", (id_leilao,) )
-    rows = cur.fetchall()
-    row = rows[0]
-    logger.info(rows)
+    try:
+        cur.execute("""SELECT id_leilao, titulo, descricao, preco_minimo, momento_fim, id_familia, versao, creator_username, artigo_id, cancelled
+                    FROM leilao
+                    WHERE leilao.id_leilao = %s""", (id_leilao,) )
+        rows = cur.fetchall()
+        row = rows[0]
 
-    aux = getHighestBidder(row[0])
-    if aux[0] != None:
-        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
-    else:
-        content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': None, 'highestBidder': None}
+        aux = getHighestBidder(row[0])
+        if aux[0] != None:
+            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': aux[0][0][1], 'highestBidder': aux[1][0][0]}
+        else:
+            content = {'id_leilao': row[0], 'titulo': row[1], 'descricao': row[2], 'preco_minimo': row[3], 'momento_fim': row[4], 'id_familia': row[5], 'versao': row[6], 'creator_username': row[7], 'artigo_id': int(row[8]), 'cancelled': row[9], 'highestBid': None, 'highestBidder': None}
 
-    conn.close ()
-    return jsonify(content)
+        cur.execute("""SELECT utilizador_username, valor
+                    FROM licitacao
+                    WHERE licitacao.leilao_id_leilao = %s""", (id_leilao,) )
+        rows = cur.fetchall()
+        logger.info(rows)
+        content['licitacoes'] = rows
+        
+        cur.execute("""SELECT utilizador_username, conteudo
+                    FROM mensagem
+                    WHERE mensagem.leilao_id_leilao = %s""", (id_leilao,) )
+        rows = cur.fetchall()
+        logger.info(rows)
+        content['mensagens'] = rows
+        
+        
+        conn.close ()
+        return jsonify(content)
 
-    # except (Exception) as error:
-    #     logger.error(error)
-    #     logger.error(type(error))
-    #
-    #     return jsonify('ERROR: Leilao missing from database!')
+    except (Exception) as error:
+        logger.error(error)
+        logger.error(type(error))
+    
+        return jsonify('ERROR: Leilao missing from database!')
 
 #GET ALL ARTIGOS
 @app.route("/dbproj/artigo/", methods=['GET'])
