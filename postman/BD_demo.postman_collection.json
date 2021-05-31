@@ -161,7 +161,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"raw": "{\n    \"authcode\": \"4\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -169,7 +169,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/dbproj/licitar/1/130",
+					"raw": "http://localhost:8080/dbproj/licitar/1/250",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -179,7 +179,7 @@
 						"dbproj",
 						"licitar",
 						"1",
-						"130"
+						"250"
 					]
 				}
 			},
@@ -392,7 +392,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"raw": "{\n    \"authcode\": \"2\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -433,7 +433,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/dbproj/user/notificacoes",
+					"raw": "http://localhost:8080/dbproj/leilao/mural/2",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -441,8 +441,9 @@
 					"port": "8080",
 					"path": [
 						"dbproj",
-						"user",
-						"notificacoes"
+						"leilao",
+						"mural",
+						"2"
 					]
 				}
 			},
@@ -455,7 +456,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"username\": \"UserTeste2\", \n    \"email\": \"Email@teste2.com\", \n    \"password\": \"PasswordTeste\",\n    \"admin\": true\n}",
+					"raw": "{\n    \"username\": \"UserTeste4\", \n    \"email\": \"Email@teste4.com\", \n    \"password\": \"PasswordTeste\",\n    \"admin\": true\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -515,7 +516,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"artigo_id\": \"1\", \n    \"preco_minimo\": \"10\", \n    \"titulo\": \"Leilao1\",\n    \"descricao\":\"este e o primeiro leilao\",\n    \"momento_fim\":\"2021-05-27 17:30\",\n    \"authcode\": \"1\"\n}",
+					"raw": "{\n    \"artigo_id\": \"1\", \n    \"preco_minimo\": \"10\", \n    \"titulo\": \"Leilao1\",\n    \"descricao\":\"este e o segundo leilao\",\n    \"momento_fim\":\"2021-05-27 17:30\",\n    \"authcode\": \"1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -545,7 +546,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"id_leilao\":\"1\",\n    \"conteudo\":\"Primeira mensagem!!!\",\n    \"authcode\": \"1\"\n}",
+					"raw": "{\n    \"id_leilao\":\"2\",\n    \"conteudo\":\"Segunda mensagem!!!\",\n    \"authcode\": \"2\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -643,7 +644,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/dbproj/leilao/1/cancel",
+					"raw": "http://localhost:8080/dbproj/leilao/2/cancel",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -652,8 +653,39 @@
 					"path": [
 						"dbproj",
 						"leilao",
-						"1",
+						"2",
 						"cancel"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ban User",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"authcode\": \"1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/dbproj/user/UserTeste/ban",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"dbproj",
+						"user",
+						"UserTeste",
+						"ban"
 					]
 				}
 			},
