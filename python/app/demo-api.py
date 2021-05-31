@@ -850,6 +850,7 @@ def getHighestBidder(id_leilao):
     FROM licitacao
     WHERE licitacao.leilao_id_leilao = %s AND licitacao.cancelled = false
     GROUP BY utilizador_username
+    ORDER BY 2 DESC
     """
     values = [id_leilao]
     cur.execute(statement, values)
