@@ -705,29 +705,29 @@ def ban_user(username):
         cur.execute(statement, values)
 
         cur.execute("SELECT DISTINCT leilao_id_leilao FROM licitacao where utilizador_username = %s", (username,))
-        rows = cur.fetchall();
+        rows = cur.fetchall()
 
         logger.debug(rows)
 
         for row in rows:
             cur.execute("SELECT * FROM licitacao where leilao_id_leilao = %s AND utilizador_username = %s ORDER BY valor DESC LIMIT 1", (row[0], username))
-            maior_licitacao_banned = cur.fetchall();
+            maior_licitacao_banned = cur.fetchall()
 
             logger.debug(maior_licitacao_banned)
 
             cur.execute("SELECT * FROM licitacao where leilao_id_leilao = %s AND valor > %s ORDER BY valor DESC", (row[0], maior_licitacao_banned[0][1]))
-            licitacoes_afetadas = cur.fetchall();
+            licitacoes_afetadas = cur.fetchall()
 
             logger.debug(licitacoes_afetadas)
 
             for i in range(len(licitacoes_afetadas)):
-                licitacao = licitacoes_afetadas[i];
+                licitacao = licitacoes_afetadas[i]
                 
                 if i == 0:
                     cur.execute("UPDATE licitacao SET valor = %s WHERE id = %s", (maior_licitacao_banned[0][1], licitacao[0]))
 
                 else:
-                    cur.execute("INSERT INTO notificacao VALUES(DEFAULT, 'A sua licitação foi invalidada porque um utilizador foi banido.', %s, %s)", (maior_licitacao_banned[0][4], row[0]));
+                    cur.execute(f"INSERT INTO notificacao VALUES(DEFAULT, 'A sua licitação foi invalidada porque um utilizador foi banido.', '{licitacao[4]}', {row[0]})")
 
         result = f'Updated: {cur.rowcount}'
         cur.execute("commit")
